@@ -10,3 +10,4 @@ djangorestframework-simplejwt==4.7.2
 django-filter==23.1
 PyJWT==2.1.0
 djangorestframework-simplejwt==4.7.2
+gunicorn
