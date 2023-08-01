@@ -9,6 +9,7 @@ services:
       - ../frontend/:/app/result_build/
   nginx:
     image: nginx:1.19.3
+    network_mode: host
     ports:
       - "80:80"
     volumes:
