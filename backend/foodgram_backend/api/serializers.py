@@ -22,7 +22,7 @@ class RecipeIngredientSerializer(serializers. ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
-    ingredients = RecipeIngredientSerializer(many=True, source='recipeingredient_set')
+    ingredients = RecipeIngredientSerializer(many=True, source='recipe_ingredients')
 
     class Meta:
         model = Recipe
