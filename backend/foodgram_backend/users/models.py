@@ -28,18 +28,16 @@ class CustomUser(AbstractUser):
     first_name = models.CharField(
         verbose_name=_('Имя'),
         max_length=150,
-        unique=False,
         blank=False
     )
     last_name = models.CharField(
         verbose_name=_('Фамилия'),
         max_length=150,
-        unique=False,
         blank=False
     )
     role = models.CharField(
         verbose_name=_('Роль пользователя'),
-        max_length=10,
+        max_length=32,
         default=USER,
         choices=CHOICES_ROLE
     )
@@ -58,8 +56,20 @@ class CustomUser(AbstractUser):
         return self.role == self.ADMIN or self.is_superuser or self.is_staff
 
     def __str__(self):
-        return self.username
+        return self.email
 
 
-class User(CustomUser):
-    pass
+class Follower(models.Model):
+    """Модель подписчиков"""
+    user = models.ForeignKey(
+        CustomUser,
+        verbose_name='Подписчик',
+        on_delete=models.CASCADE,
+        related_name='follower'
+    )
+    author = models.ForeignKey(
+        CustomUser,
+        verbose_name='Автор',
+        on_delete=models.CASCADE,
+        related_name='following'
+    )

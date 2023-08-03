@@ -16,6 +16,11 @@ class Recipe(models.Model):
     name = models.CharField(max_length=200)
     cooking_time = models.PositiveIntegerField()
     text = models.CharField(max_length=250)
+    image = models.ImageField(
+        upload_to='recipes',
+        blank=True,
+        null=True,
+    )
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     ingredients = models.ManyToManyField(
         'Ingredient',
