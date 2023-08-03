@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 
 
-class User(AbstractUser):
+class CustomUser(AbstractUser):
     """Модель User"""
     USER = 'user'
     ADMIN = 'admin'
@@ -59,3 +59,7 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class User(CustomUser):
+    pass

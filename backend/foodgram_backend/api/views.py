@@ -3,7 +3,8 @@ from djoser.views import UserViewSet
 from rest_framework.viewsets import ModelViewSet
 
 from recipes.models import Tag, Recipe
-from .serializers import TagSerializer, RecipeSerializer
+from users.models import CustomUser
+from .serializers import TagSerializer, RecipeSerializer, UserSerializer, RecipeCreateSerializer
 
 
 def index(request):
@@ -11,7 +12,8 @@ def index(request):
 
 
 class CustomUserViewSet(UserViewSet):
-    pass
+    queryset = CustomUser.objects.all()
+    serializer_class = UserSerializer
 
 
 class TagViewSet(ModelViewSet):
@@ -24,6 +26,7 @@ class RecipeViewSet(ModelViewSet):
     serializer_class = RecipeSerializer
 
     def dispatch(self, request, *args, **kwargs):
+        """Логи запросов к db"""
         res = super().dispatch(request, *args, **kwargs)
 
         from django.db import connection
@@ -34,7 +37,16 @@ class RecipeViewSet(ModelViewSet):
         return res
 
     def get_queryset(self):
+        """Оптимизация запросов"""
         recipes = Recipe.objects.prefetch_related(
             'recipe_ingredients__ingredient', 'tags'
         ).all()
         return recipes
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return RecipeCreateSerializer
+        return RecipeSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
