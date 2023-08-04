@@ -20,6 +20,9 @@ class Tag(models.Model):
         verbose_name_plural = _('Теги')
         ordering = ('id',)
 
+    def __str__(self):
+        return self.name
+
 
 class Recipe(models.Model):
     tags = models.ManyToManyField(Tag, verbose_name=_('Тег'))
@@ -89,6 +92,6 @@ class RecipeIngredient(models.Model):
     amount = models.PositiveIntegerField(verbose_name=_('Количество'),)
 
     class Meta:
-        verbose_name = _('Рецепт_Ингредиент')
-        verbose_name_plural = _('Рецепты_Ингредиенты')
+        verbose_name = _('Ингредиент')
+        verbose_name_plural = _('Ингредиенты')
         ordering = ('id',)

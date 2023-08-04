@@ -27,10 +27,8 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = (
         'pk',
         'name',
-        'tags',
         'author',
         'text',
-        'ingredients',
         'image'
     )
     list_display_links = ('name',)
@@ -41,7 +39,6 @@ class RecipeAdmin(admin.ModelAdmin):
         'ingredients'
     )
     list_editable = (
-        'name',
         'author',
     )
     list_filter = ('tags',)
@@ -55,10 +52,8 @@ class IngredientAdmin(admin.ModelAdmin):
         'name',
         'measurement_unit'
     )
-    list_display_links = ('name',)
     list_filter = ('measurement_unit',)
-    list_editable = (
-        'name',
+    list = (
         'measurement_unit'
     )
     search_fields = ('name',)
