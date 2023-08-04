@@ -63,13 +63,21 @@ class Follower(models.Model):
     """Модель подписчиков"""
     user = models.ForeignKey(
         CustomUser,
-        verbose_name='Подписчик',
+        verbose_name=_('Подписчик'),
         on_delete=models.CASCADE,
         related_name='follower'
     )
     author = models.ForeignKey(
         CustomUser,
-        verbose_name='Автор',
+        verbose_name=_('Автор'),
         on_delete=models.CASCADE,
         related_name='following'
     )
+
+    class Meta:
+        verbose_name = _('Подписчик')
+        verbose_name_plural = _('Подписчики')
+        ordering = ('id',)
+
+    def __str__(self):
+        return f'{self.user} подписан на {self.author}'

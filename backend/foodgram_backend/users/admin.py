@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CustomUser
+from .models import CustomUser, Follower
 
 
 @admin.register(CustomUser)
@@ -13,6 +13,7 @@ class UserAdmin(admin.ModelAdmin):
         'last_name',
         'role'
     )
+    list_display_links = ('username',)
     search_fields = ('username',)
     list_filter = ('role',)
     list_editable = (
@@ -22,4 +23,23 @@ class UserAdmin(admin.ModelAdmin):
         'last_name'
     )
     list_fields = ('first_name',)
+    empty_value_display = '-пусто-'
+
+
+@admin.register(Follower)
+class FollowerAdmin(admin.ModelAdmin):
+    """Админ-модель подписок"""
+    list_display = (
+        'pk',
+        'user',
+        'author'
+    )
+    search_fields = (
+        'user',
+        'author'
+    )
+    list_editable = (
+        'user',
+        'author'
+    )
     empty_value_display = '-пусто-'
