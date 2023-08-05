@@ -1,7 +1,6 @@
 import base64
 
 from django.core.files.base import ContentFile
-from django.db import transaction
 from rest_framework import serializers
 
 from recipes.models import Tag, Recipe, RecipeIngredient, Ingredient
@@ -36,7 +35,7 @@ class TagSerializer(serializers.ModelSerializer):
 class RecipeIngredientSerializer(serializers. ModelSerializer):
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.CharField(source='ingredient.name')
-    measurement_unit = serializers.CharField(source='ingredient.measurement_unit')
+    measurement_unit = serializers.CharField(source='ingredient.unit')
 
     class Meta:
         model = RecipeIngredient
@@ -62,8 +61,8 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
-        source='ingredient',
-        queryset=Ingredient.objects.all()
+        queryset=Ingredient.objects.all(),
+        source='ingredient'
     )
 
     class Meta:
@@ -73,6 +72,9 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientCreateSerializer(many=True)
+    name = serializers.RegexField(
+        max_length=200, regex=r'^[\w.@+-]+\Z', required=True
+    )
 
     class Meta:
         model = Recipe
@@ -90,7 +92,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop('ingredients')
         instance = super().create(validated_data)
         for ingredient_data in ingredients:
-            RecipeIngredient(
+            RecipeIngredient.objects.create(
                 recipe=instance,
                 ingredient=ingredient_data['ingredient'],
                 amount=ingredient_data['amount']
@@ -98,5 +100,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance):
-        """Отдача сериализованного объекта"""
-        return super().to_representation(instance)
+        representation = super().to_representation(instance)
+        representation['ingredients'] = RecipeIngredientSerializer(
+            instance.recipe_ingredients.all(),
+            many=True
+        ).data
+        return representation

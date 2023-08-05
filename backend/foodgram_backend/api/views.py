@@ -1,5 +1,6 @@
 from django.shortcuts import render, HttpResponse
 from djoser.views import UserViewSet
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.pagination import LimitOffsetPagination
 
@@ -23,6 +24,7 @@ class TagViewSet(ModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     pagination_class = LimitOffsetPagination
