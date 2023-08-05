@@ -1,6 +1,7 @@
 from django.shortcuts import render, HttpResponse
 from djoser.views import UserViewSet
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.pagination import LimitOffsetPagination
 
 from recipes.models import Tag, Recipe
 from users.models import CustomUser
@@ -24,6 +25,7 @@ class TagViewSet(ModelViewSet):
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
+    pagination_class = LimitOffsetPagination
 
     def dispatch(self, request, *args, **kwargs):
         """Логи запросов к db"""
