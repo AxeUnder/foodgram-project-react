@@ -26,6 +26,7 @@ class RecipeAdmin(admin.ModelAdmin):
     inlines = (RecipeIngredientInline,)
     list_display = (
         'pk',
+        'pub_date',
         'name',
         'author',
         'text',
