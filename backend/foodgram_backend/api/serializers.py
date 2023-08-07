@@ -29,7 +29,7 @@ class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tag
-        fields = '__all__'
+        fields = ('id', 'name', 'color', 'slug')
 
 
 class RecipeIngredientSerializer(serializers. ModelSerializer):
@@ -88,7 +88,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         author = self.context.get('request').user
-        tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
         instance = super().create(validated_data)
         for ingredient_data in ingredients:

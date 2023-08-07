@@ -17,7 +17,7 @@ class Tag(models.Model):
         max_length=7,
     )
     slug = models.SlugField(
-        verbose_name=_('Слаг'),
+        verbose_name=_('slug'),
         max_length=200,
         unique=True,
     )
@@ -35,7 +35,8 @@ class Recipe(models.Model):
     tags = models.ManyToManyField(
         Tag,
         verbose_name=_('Теги'),
-        help_text='Выставите теги'
+        help_text='Выставите теги',
+        related_name='tags'
     )
     name = models.CharField(
         verbose_name=_('Название рецепта'),
