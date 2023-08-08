@@ -1,7 +1,7 @@
 import base64
-
 from django.core.files.base import ContentFile
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import Tag, Recipe, RecipeIngredient, Ingredient
 from users.models import CustomUser
@@ -33,6 +33,18 @@ class UserSerializer(serializers.ModelSerializer):
             'last_name',
             'is_subscribed'
         )
+        validators = [
+            UniqueTogetherValidator(
+                queryset=CustomUser.objects.all(), fields=('username', 'email')
+            )
+        ]
+
+    def validated_data(self, value):
+        if value.lower() == 'me':
+            raise serializers.ValidationError(
+                'Username "me" запрещён к использованию'
+            )
+        return value
 
 
 class TagSerializer(serializers.ModelSerializer):
