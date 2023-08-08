@@ -35,6 +35,12 @@ class CustomUser(AbstractUser):
         max_length=150,
         blank=False
     )
+    is_subscribed = models.ManyToManyField(
+        'Subscription',
+        verbose_name=_('Является подписчиком'),
+        related_name='subscriptions',
+        symmetrical=False, blank=True
+    )
     role = models.CharField(
         verbose_name=_('Роль пользователя'),
         max_length=32,
@@ -59,7 +65,7 @@ class CustomUser(AbstractUser):
         return self.email
 
 
-class Follower(models.Model):
+class Subscription(models.Model):
     """Модель подписчиков"""
     user = models.ForeignKey(
         CustomUser,

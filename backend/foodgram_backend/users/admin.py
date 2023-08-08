@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CustomUser, Follower
+from .models import CustomUser, Subscription
 
 
 @admin.register(CustomUser)
@@ -26,8 +26,8 @@ class UserAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
 
-@admin.register(Follower)
-class FollowerAdmin(admin.ModelAdmin):
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
     """Админ-модель подписок"""
     list_display = (
         'pk',

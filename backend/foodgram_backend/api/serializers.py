@@ -19,10 +19,13 @@ class Base64ImageField(serializers.ImageField):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    username = serializers.RegexField(
+        max_length=150, regex=r'^[\w.@+-]+\Z', required=True
+    )
 
     class Meta:
         model = CustomUser
-        fields = '__all__'
+        fields = ('id', 'username', 'email', 'first_name', 'last_name')
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -72,9 +75,6 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientCreateSerializer(many=True)
-    name = serializers.RegexField(
-        max_length=200, regex=r'^[\w.@+-]+\Z', required=True
-    )
 
     class Meta:
         model = Recipe
