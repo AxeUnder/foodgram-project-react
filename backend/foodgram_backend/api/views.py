@@ -9,10 +9,6 @@ from users.models import CustomUser
 from .serializers import TagSerializer, RecipeSerializer, UserSerializer, RecipeCreateSerializer
 
 
-def index(request):
-    return HttpResponse('index')
-
-
 class CustomUserViewSet(UserViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer

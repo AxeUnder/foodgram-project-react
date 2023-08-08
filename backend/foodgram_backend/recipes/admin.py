@@ -4,12 +4,14 @@ from .models import Tag, Recipe, Ingredient, RecipeIngredient
 
 
 class RecipeIngredientInline(admin.TabularInline):
+    """Админ-модель рецептов_ингредиентов"""
     model = RecipeIngredient
     extra = 1
 
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
+    """Админ-модель тегов"""
     list_display = (
         'pk',
         'name',
@@ -23,6 +25,7 @@ class TagAdmin(admin.ModelAdmin):
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
+    """Админ-модель рецептов"""
     inlines = (RecipeIngredientInline,)
     list_display = (
         'pk',
@@ -48,6 +51,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
+    """Админ-модель ингредиентов"""
     list_display = (
         'pk',
         'name',
