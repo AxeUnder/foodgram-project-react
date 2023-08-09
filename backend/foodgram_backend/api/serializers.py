@@ -1,6 +1,7 @@
 import base64
 from django.core.files.base import ContentFile
 from rest_framework import serializers
+from rest_framework.decorators import action
 from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import Tag, Recipe, RecipeIngredient, Ingredient
@@ -19,6 +20,7 @@ class Base64ImageField(serializers.ImageField):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Serializer модели CustomUser"""
     username = serializers.RegexField(
         max_length=150, regex=r'^[\w.@+-]+\Z', required=True
     )
@@ -48,6 +50,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class TagSerializer(serializers.ModelSerializer):
+    """Serializer модели Tag"""
 
     class Meta:
         model = Tag
@@ -55,6 +58,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientSerializer(serializers. ModelSerializer):
+    """Serializer модели RecipeIngredient"""
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.CharField(source='ingredient.name')
     measurement_unit = serializers.CharField(source='ingredient.measurement_unit')
@@ -65,6 +69,7 @@ class RecipeIngredientSerializer(serializers. ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
+    """Serializer модели Recipe"""
     tags = TagSerializer(many=True)
     ingredients = RecipeIngredientSerializer(many=True, source='recipe_ingredients')
     image = Base64ImageField()
@@ -83,6 +88,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
+    """Serializer создания объектов в модели RecipeIngredient"""
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all(),
         source='ingredient'
@@ -94,6 +100,7 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
+    """Serializer создания объектов в модели Recipe"""
     ingredients = RecipeIngredientCreateSerializer(many=True)
 
     class Meta:

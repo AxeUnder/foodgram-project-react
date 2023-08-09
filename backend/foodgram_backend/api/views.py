@@ -1,10 +1,13 @@
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.shortcuts import render, HttpResponse, get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.pagination import LimitOffsetPagination
 
@@ -20,20 +23,26 @@ class CustomUserViewSet(UserViewSet):
     serializer_class = UserSerializer
     http_method_names = ['get', 'post', 'patch', 'delete']
 
-    @action(
-        methods=['get', 'patch'],
-        detail=False,
-    )
-    def me(self, request):
-        user = get_object_or_404(CustomUser, username=self.request.user)
-        serializer = UserSerializer(user)
-        if request.method == 'PATCH':
-            serializer = UserSerializer(
-                user, data=request.data, partial=True
+    @api_view(['POST'])
+    def sign_up(request):
+        serializer = UserSerializer(data=request.data)
+        email = request.data.get('email')
+        serializer.is_valid(raise_exception=True)
+        try:
+            user, created = CustomUser.objects.get_or_create(**serializer.validated_data)
+        except IntegrityError:
+            return Response(
+                'Попробуй другой email или username',
+                status=status.HTTP_400_BAD_REQUEST,
             )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        confirmation_code = default_token_generator.make_token(user)
+        send_mail(
+            'Token Token Token',
+            confirmation_code,
+            'Foodgram',
+            [email],
+            fail_silently=False,
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
@@ -88,3 +97,4 @@ class RecipeViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
