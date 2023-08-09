@@ -72,7 +72,8 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = '__all__'
+        exclude = ('pub_date',)
+
 
     def get_ingredients(self, instance):
         return RecipeIngredientSerializer(
@@ -102,7 +103,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'cooking_time',
             'text', 'tags',
             'ingredients',
-            'image'
+            'image',
+            'pub_date'
         )
 
     def create(self, validated_data):

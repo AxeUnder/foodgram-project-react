@@ -35,11 +35,10 @@ class CustomUser(AbstractUser):
         max_length=150,
         blank=False
     )
-    is_subscribed = models.ManyToManyField(
-        'Subscription',
+    is_subscribed = models.BooleanField(
         verbose_name=_('Является подписчиком'),
-        related_name='subscriptions',
-        symmetrical=False, blank=True
+        blank=True,
+        default=False
     )
     role = models.CharField(
         verbose_name=_('Роль пользователя'),

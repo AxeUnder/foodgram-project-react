@@ -14,14 +14,15 @@ from .serializers import TagSerializer, RecipeSerializer, UserSerializer, Recipe
 
 
 class CustomUserViewSet(UserViewSet):
+    """ViewSet модели пользователей"""
     permission_classes = [IsAuthenticated]
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     @action(
         methods=['get', 'patch'],
         detail=False,
-        permission_classes=(IsAuthenticated,),
     )
     def me(self, request):
         user = get_object_or_404(CustomUser, username=self.request.user)
@@ -51,14 +52,15 @@ class CustomUserViewSet(UserViewSet):
 
 
 class TagViewSet(ModelViewSet):
+    """ViewSet модели тегов"""
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
 
 
 class RecipeViewSet(ModelViewSet):
+    """ViewSet модели рецептов"""
     permission_classes = [IsAuthenticated]
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
     pagination_class = LimitOffsetPagination
 
     def dispatch(self, request, *args, **kwargs):

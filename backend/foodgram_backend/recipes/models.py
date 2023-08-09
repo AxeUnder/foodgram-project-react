@@ -36,17 +36,49 @@ class Recipe(models.Model):
     """Модель рецептов"""
     tags = models.ManyToManyField(
         Tag,
-        verbose_name=_('Теги'),
+        verbose_name=_('Список тегов'),
         help_text='Выставите теги',
         related_name='tags'
     )
+    author = models.ForeignKey(
+        User,
+        verbose_name=_('Автор рецепта'),
+        on_delete=models.CASCADE,
+    )
+    ingredients = models.ManyToManyField(
+        'Ingredient',
+        verbose_name=_('Список ингредиентов'),
+        through='RecipeIngredient',
+        through_fields=('recipe', 'ingredient'),
+        help_text='Выберете ингредиенты'
+    )
+    is_favorited = models.BooleanField(
+        verbose_name=_('Находится ли в избранном'),
+        blank=True, default=False
+    )
+    is_in_shopping_cart = models.BooleanField(
+        verbose_name=_('Находится ли в корзине'),
+        blank=True, default=False
+    )
     name = models.CharField(
-        verbose_name=_('Название рецепта'),
+        verbose_name=_('Название'),
         max_length=200,
         help_text='Введите название рецепта'
     )
+    image = models.ImageField(
+        verbose_name=_('Ссылка на картинку на сайте'),
+        upload_to='recipes',
+        blank=True,
+        null=True,
+        help_text='Загрузите картинку'
+    )
+    text = models.CharField(
+        verbose_name=_('Описание'),
+        max_length=250,
+        help_text='Составьте описание'
+    )
     cooking_time = models.PositiveIntegerField(
-        verbose_name=_('Время готовки'),
+        verbose_name=_('Время приготовления (в минутах)'),
         validators=[
             MinValueValidator(
                 1,
@@ -54,30 +86,6 @@ class Recipe(models.Model):
             )
         ],
         help_text='Введите время готовки (мин.)'
-    )
-    text = models.CharField(
-        verbose_name=_('Описание'),
-        max_length=250,
-        help_text='Составьте описание'
-    )
-    image = models.ImageField(
-        verbose_name=_('Картинка'),
-        upload_to='recipes',
-        blank=True,
-        null=True,
-        help_text='Загрузите картинку'
-    )
-    author = models.ForeignKey(
-        User,
-        verbose_name=_('Автор'),
-        on_delete=models.CASCADE,
-    )
-    ingredients = models.ManyToManyField(
-        'Ingredient',
-        verbose_name=_('Ингредиенты'),
-        through='RecipeIngredient',
-        through_fields=('recipe', 'ingredient'),
-        help_text='Выберете ингредиенты'
     )
     pub_date = models.DateTimeField(
         verbose_name=_('Дата публикации'),
