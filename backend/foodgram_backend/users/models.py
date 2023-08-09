@@ -40,6 +40,11 @@ class CustomUser(AbstractUser):
         blank=True,
         default=False
     )
+    password = models.CharField(
+        verbose_name=_('Пароль'),
+        max_length=150,
+        blank=False,
+    )
     role = models.CharField(
         verbose_name=_('Роль пользователя'),
         max_length=32,

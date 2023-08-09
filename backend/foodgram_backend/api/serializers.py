@@ -24,6 +24,10 @@ class UserSerializer(serializers.ModelSerializer):
     username = serializers.RegexField(
         max_length=150, regex=r'^[\w.@+-]+\Z', required=True
     )
+    email = serializers.EmailField(
+        max_length=254,
+        required=True,
+    )
 
     class Meta:
         model = CustomUser
@@ -33,7 +37,8 @@ class UserSerializer(serializers.ModelSerializer):
             'email',
             'first_name',
             'last_name',
-            'is_subscribed'
+            'is_subscribed',
+            'password'
         )
         validators = [
             UniqueTogetherValidator(
@@ -41,12 +46,50 @@ class UserSerializer(serializers.ModelSerializer):
             )
         ]
 
-    def validated_data(self, value):
+    def validated_username(self, value):
         if value.lower() == 'me':
             raise serializers.ValidationError(
                 'Username "me" запрещён к использованию'
             )
         return value
+
+
+class UserSignUpSerializer(serializers.Serializer):
+    username = serializers.RegexField(
+        max_length=150, regex=r'^[\w.@+-]+\Z', required=True
+    )
+    email = serializers.EmailField(max_length=254, required=True)
+
+    def validate_username(self, value):
+        if value.lower() == 'me':
+            raise serializers.ValidationError(
+                'Username "me" запрещён к использованию'
+            )
+        return value
+
+
+class UserEditSerializer(serializers.Serializer):
+    """Serializer создания объектов в модели Recipe"""
+    username = serializers.RegexField(
+        max_length=150, regex=r'^[\w.@+-]+\Z', required=True,
+    )
+    email = serializers.EmailField(max_length=254, required=True)
+
+    class Meta:
+        model = CustomUser
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'is_subscribed'
+        )
+
+"""    def create(self, validated_data):
+        return super().create(validated_data)
+
+    def to_representation(self, instance):
+        return UserSerializer(instance).data"""
 
 
 class TagSerializer(serializers.ModelSerializer):

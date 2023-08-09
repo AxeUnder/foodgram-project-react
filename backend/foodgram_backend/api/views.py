@@ -13,7 +13,14 @@ from rest_framework.pagination import LimitOffsetPagination
 
 from recipes.models import Tag, Recipe
 from users.models import CustomUser
-from .serializers import TagSerializer, RecipeSerializer, UserSerializer, RecipeCreateSerializer
+from .serializers import (
+    TagSerializer,
+    RecipeSerializer,
+    UserSerializer,
+    RecipeCreateSerializer,
+    UserSignUpSerializer,
+    UserEditSerializer
+)
 
 
 class CustomUserViewSet(UserViewSet):
@@ -23,9 +30,20 @@ class CustomUserViewSet(UserViewSet):
     serializer_class = UserSerializer
     http_method_names = ['get', 'post', 'patch', 'delete']
 
-    @api_view(['POST'])
+    def dispatch(self, request, *args, **kwargs):
+        """Логи запросов к db"""
+        res = super().dispatch(request, *args, **kwargs)
+
+        from django.db import connection
+        print(len(connection.queries))
+        for q in connection.queries:
+            print('>>>>', q['sql'])
+
+        return res
+
+    @action(methods=['post'], detail=False, url_path='sign_up')
     def sign_up(request):
-        serializer = UserSerializer(data=request.data)
+        serializer = UserSignUpSerializer(data=request.data)
         email = request.data.get('email')
         serializer.is_valid(raise_exception=True)
         try:
@@ -45,6 +63,19 @@ class CustomUserViewSet(UserViewSet):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(methods=['get'], detail=False,)
+    def me(self, request):
+        user = get_object_or_404(CustomUser, username=self.request.user)
+        serializer = UserEditSerializer(user)
+        if request.method == 'POST':
+            serializer = UserEditSerializer(
+                user, data=request.data, partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -58,6 +89,14 @@ class CustomUserViewSet(UserViewSet):
                 'Попробуй другой email или username',
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+"""
+def get_serializer_class(self):
+if self.action == 'create':
+return UserSingUpSerializer
+return UserSerializer
+"""
 
 
 class TagViewSet(ModelViewSet):

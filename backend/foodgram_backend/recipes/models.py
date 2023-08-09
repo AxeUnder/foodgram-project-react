@@ -1,10 +1,8 @@
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 
-
-User = get_user_model()
+from users.models import CustomUser
 
 
 class Tag(models.Model):
@@ -41,7 +39,7 @@ class Recipe(models.Model):
         related_name='tags'
     )
     author = models.ForeignKey(
-        User,
+        CustomUser,
         verbose_name=_('Автор рецепта'),
         on_delete=models.CASCADE,
     )
