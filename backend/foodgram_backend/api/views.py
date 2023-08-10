@@ -9,7 +9,7 @@ from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ViewSet
 from rest_framework.pagination import LimitOffsetPagination
 
 from recipes.models import Tag, Recipe
@@ -23,11 +23,11 @@ from .serializers import (
 )
 
 
-class CustomUserViewSet(UserViewSet):
+class CustomUserViewSet():
     """ViewSet модели пользователей"""
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
-    lookup_field = 'pk'
+    lookup_field = 'id'
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
     def get_serializer_class(self):
@@ -35,8 +35,8 @@ class CustomUserViewSet(UserViewSet):
             return CustomUserSignUpSerializer
         return CustomUserSerializer
 
-    @action(detail=False, methods=['POST'], url_path='set_password')
-    def set_password(self, request, pk=None):
+    @action(detail=True, methods=['POST'], )
+    def post(self, request, format=None):
         user = self.get_object()
         serializer = SetPasswordSerializer(data=request.data)
 
