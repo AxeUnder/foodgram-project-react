@@ -19,77 +19,31 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
-class UserSerializer(serializers.ModelSerializer):
+class CustomUserSerializer(serializers.ModelSerializer):
     """Serializer модели CustomUser"""
-    username = serializers.RegexField(
-        max_length=150, regex=r'^[\w.@+-]+\Z', required=True
-    )
-    email = serializers.EmailField(
-        max_length=254,
-        required=True,
-    )
-
     class Meta:
         model = CustomUser
         fields = (
             'id',
-            'username',
             'email',
-            'first_name',
-            'last_name',
-            'is_subscribed',
-            'password'
-        )
-        validators = [
-            UniqueTogetherValidator(
-                queryset=CustomUser.objects.all(), fields=('username', 'email')
-            )
-        ]
-
-    def validated_username(self, value):
-        if value.lower() == 'me':
-            raise serializers.ValidationError(
-                'Username "me" запрещён к использованию'
-            )
-        return value
-
-
-class UserSignUpSerializer(serializers.Serializer):
-    username = serializers.RegexField(
-        max_length=150, regex=r'^[\w.@+-]+\Z', required=True
-    )
-    email = serializers.EmailField(max_length=254, required=True)
-
-    def validate_username(self, value):
-        if value.lower() == 'me':
-            raise serializers.ValidationError(
-                'Username "me" запрещён к использованию'
-            )
-        return value
-
-
-class UserEditSerializer(serializers.Serializer):
-    """Serializer создания объектов в модели Recipe"""
-    username = serializers.RegexField(
-        max_length=150, regex=r'^[\w.@+-]+\Z', required=True,
-    )
-    email = serializers.EmailField(max_length=254, required=True)
-
-    class Meta:
-        model = CustomUser
-        fields = (
             'username',
-            'email',
             'first_name',
             'last_name',
             'is_subscribed'
         )
 
-"""    def create(self, validated_data):
-        return super().create(validated_data)
 
-    def to_representation(self, instance):
-        return UserSerializer(instance).data"""
+class CustomUserSignUpSerializer(serializers.Serializer):
+    class Meta:
+        model = CustomUser
+        fields = ('email', 'username', 'first_name', 'last_name', 'password')
+
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        instance = super().create(validated_data)
+        instance.set_password(password)
+        instance.save()
+        return instance
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -116,7 +70,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     ingredients = RecipeIngredientSerializer(many=True, source='recipe_ingredients')
     image = Base64ImageField()
-    author = UserSerializer(read_only=True)
+    author = CustomUserSerializer(read_only=True)
 
     class Meta:
         model = Recipe
