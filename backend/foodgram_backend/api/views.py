@@ -59,6 +59,20 @@ class TagViewSet(ModelViewSet):
     """ViewSet модели тегов"""
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    http_method_names = ['get']
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+
+class TagListView(APIView):
+    """Представление для получения списка тегов"""
+    def get(self, request):
+        tags = Tag.objects.all()
+        serializer = TagSerializer(tags, many=True)
+        return Response(serializer.data)
 
 
 class RecipeViewSet(ModelViewSet):

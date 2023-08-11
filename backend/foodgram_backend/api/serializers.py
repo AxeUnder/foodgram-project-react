@@ -78,7 +78,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         model = Recipe
         exclude = ('pub_date',)
 
-
     def get_ingredients(self, instance):
         return RecipeIngredientSerializer(
             instance.recipe_ingredients.all(),
