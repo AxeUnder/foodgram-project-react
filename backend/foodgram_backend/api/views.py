@@ -4,13 +4,12 @@ from django.db import IntegrityError
 from django.shortcuts import render, HttpResponse, get_object_or_404
 from djoser.serializers import SetPasswordSerializer
 from djoser.views import UserViewSet
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, pagination
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ViewSet
-from rest_framework.pagination import LimitOffsetPagination
 
 from recipes.models import Tag, Recipe
 from users.models import CustomUser
@@ -23,7 +22,7 @@ from .serializers import (
 )
 
 
-class CustomUserViewSet():
+class CustomUserViewSet(UserViewSet):
     """ViewSet модели пользователей"""
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
@@ -35,23 +34,25 @@ class CustomUserViewSet():
             return CustomUserSignUpSerializer
         return CustomUserSerializer
 
-    @action(detail=True, methods=['POST'], )
-    def post(self, request, format=None):
-        user = self.get_object()
-        serializer = SetPasswordSerializer(data=request.data)
+    @action(detail=False, methods=['POST'])
+    def set_password(self, request):
+        serializer = SetPasswordSerializer(
+            data=request.data,
+            context={'request': request}
+        )
 
         if serializer.is_valid():
             current_password = serializer.validated_data['current_password']
             new_password = serializer.validated_data['new_password']
 
-            if user.check_password(current_password):
-                user.set_password(new_password)
-                user.save()
+            if self.request.user.check_password(current_password):
+                self.request.user.set_password(new_password)
+                self.request.user.save()
                 return Response(status=204)
             else:
                 return Response({'detail': 'Пароли не совпадают.'}, status=400)
         else:
-            return Response(serializer.errors, status=401)
+            return Response(serializer.errors, status=400)
 
 
 class TagViewSet(ModelViewSet):
@@ -64,7 +65,7 @@ class RecipeViewSet(ModelViewSet):
     """ViewSet модели рецептов"""
     permission_classes = [IsAuthenticated]
     queryset = Recipe.objects.all()
-    pagination_class = LimitOffsetPagination
+    pagination_class = pagination.LimitOffsetPagination
 
     def dispatch(self, request, *args, **kwargs):
         """Логи запросов к db"""
