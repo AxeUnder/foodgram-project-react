@@ -32,12 +32,13 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'is_subscribed',
             'password'
         )
+        read_only_fields = ('id',)
 
 
 class CustomUserSignUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ('email', 'username', 'first_name', 'last_name', 'password')
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'password')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
