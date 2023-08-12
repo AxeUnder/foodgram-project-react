@@ -27,6 +27,7 @@ class CustomUserViewSet(UserViewSet):
     lookup_field = 'id'
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
     pagination_class = LimitOffsetPagination
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         queryset = CustomUser.objects.all()
@@ -66,6 +67,11 @@ class CustomUserViewSet(UserViewSet):
                 return Response({'detail': 'Пароли не совпадают.'}, status=400)
         else:
             return Response(serializer.errors, status=400)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
