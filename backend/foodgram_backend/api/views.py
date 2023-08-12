@@ -1,15 +1,13 @@
-from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
-from django.db import IntegrityError
-from django.shortcuts import render, HttpResponse, get_object_or_404
+# api/view.py
 from djoser.serializers import SetPasswordSerializer
 from djoser.views import UserViewSet
-from rest_framework import status, viewsets, pagination
-from rest_framework.decorators import action, api_view
-from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet, ViewSet
+from rest_framework.viewsets import ModelViewSet
 
 from recipes.models import Tag, Recipe
 from users.models import CustomUser
@@ -28,11 +26,26 @@ class CustomUserViewSet(UserViewSet):
     serializer_class = CustomUserSerializer
     lookup_field = 'id'
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
+    pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        queryset = CustomUser.objects.all()
+        return queryset
 
     def get_serializer_class(self):
         if self.action == 'create':
             return CustomUserSignUpSerializer
         return CustomUserSerializer
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['POST'])
     def set_password(self, request):
@@ -86,7 +99,7 @@ class RecipeViewSet(ModelViewSet):
     """ViewSet модели рецептов"""
     permission_classes = [IsAuthenticated]
     queryset = Recipe.objects.all()
-    pagination_class = pagination.LimitOffsetPagination
+    pagination_class = LimitOffsetPagination
 
     def dispatch(self, request, *args, **kwargs):
         """Логи запросов к db"""

@@ -1,8 +1,8 @@
+# api/serializers.py
 import base64
+
 from django.core.files.base import ContentFile
 from rest_framework import serializers
-from rest_framework.decorators import action
-from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import Tag, Recipe, RecipeIngredient, Ingredient
 from users.models import CustomUser
@@ -29,8 +29,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'username',
             'first_name',
             'last_name',
-            'is_subscribed',
-            'password'
+            'is_subscribed'
         )
         read_only_fields = ('id',)
 
