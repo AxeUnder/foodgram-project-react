@@ -1,4 +1,5 @@
 # api/view.py
+from django.db.models import Count
 from djoser.serializers import SetPasswordSerializer
 from djoser.views import UserViewSet
 from rest_framework import status
@@ -16,7 +17,7 @@ from .serializers import (
     CustomUserSignUpSerializer,
     TagSerializer,
     RecipeSerializer,
-    RecipeCreateSerializer,
+    RecipeCreateSerializer, SubscriptionSerializer,
 )
 
 
@@ -30,7 +31,7 @@ class CustomUserViewSet(UserViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = CustomUser.objects.all()
+        queryset = CustomUser.objects.annotate(recipes_count_annotation=Count('recipes'))
         return queryset
 
     def get_serializer_class(self):
@@ -81,6 +82,16 @@ class CustomUserViewSet(UserViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
+class SubscriptionsListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        is_subscribed = request.query_params.get('is_subscribed', None)
+        subscriptions = CustomUser.objects.filter(is_subscribed=is_subscribed)
+        serializer = SubscriptionSerializer(subscriptions, many=True)
+        return Response(serializer.data)
+
+
 class TagViewSet(ModelViewSet):
     """ViewSet модели тегов"""
     queryset = Tag.objects.all()
@@ -122,7 +133,7 @@ class RecipeViewSet(ModelViewSet):
         """Оптимизация запросов"""
         recipes = Recipe.objects.prefetch_related(
             'recipe_ingredients__ingredient', 'tags'
-        ).all()
+        ).all().annotate(recipes_count_annotation=Count('author__recipes'))
         return recipes
 
     def get_serializer_class(self):
@@ -132,4 +143,5 @@ class RecipeViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-
+        self.request.user.recipes_count += 1
+        self.request.user.save()

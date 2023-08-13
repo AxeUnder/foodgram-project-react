@@ -4,7 +4,7 @@ import base64
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
-from recipes.models import Tag, Recipe, RecipeIngredient, Ingredient
+from recipes.models import Tag, Recipe, RecipeIngredient, Ingredient, UserWithRecipes
 from users.models import CustomUser
 
 
@@ -21,6 +21,10 @@ class Base64ImageField(serializers.ImageField):
 
 class CustomUserSerializer(serializers.ModelSerializer):
     """Serializer модели CustomUser"""
+    user_recipes_count = serializers.IntegerField(
+        source='recipes_count'
+    )
+
     class Meta:
         model = CustomUser
         fields = (
@@ -29,9 +33,15 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'username',
             'first_name',
             'last_name',
-            'is_subscribed'
+            'is_subscribed',
+            'user_recipes_count'
         )
         read_only_fields = ('id',)
+
+    def get_recipes_count(self, instance):
+        if self.context.get('show_recipes_count'):
+            return instance.recipes_count
+        return None
 
 
 class CustomUserSignUpSerializer(serializers.ModelSerializer):
@@ -95,6 +105,15 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeIngredient
         fields = ('id', 'amount')
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    """Serializer для подписок пользователей"""
+    recipes = RecipeSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'is_subscribed', 'recipes')
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):

@@ -37,9 +37,9 @@ class CustomUser(AbstractUser):
         blank=False
     )
     is_subscribed = models.BooleanField(
-        verbose_name=_('Является подписчиком'),
+        verbose_name=_('Подписаться на автора'),
         blank=True,
-        default=False
+        default=False,
     )
     password = models.CharField(
         verbose_name=_('Пароль'),
@@ -51,6 +51,10 @@ class CustomUser(AbstractUser):
         max_length=32,
         default=USER,
         choices=CHOICES_ROLE
+    )
+    recipes_count = models.PositiveIntegerField(
+        verbose_name=_('Общее количество рецептов пользователя'),
+        default=0
     )
 
     class Meta:

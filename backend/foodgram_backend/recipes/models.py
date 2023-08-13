@@ -43,6 +43,7 @@ class Recipe(models.Model):
         CustomUser,
         verbose_name=_('Автор рецепта'),
         on_delete=models.CASCADE,
+        related_name='recipes'
     )
     ingredients = models.ManyToManyField(
         'Ingredient',
@@ -52,11 +53,11 @@ class Recipe(models.Model):
         help_text='Выберете ингредиенты'
     )
     is_favorited = models.BooleanField(
-        verbose_name=_('Находится ли в избранном'),
+        verbose_name=_('Добавить в избранное'),
         blank=True, default=False
     )
     is_in_shopping_cart = models.BooleanField(
-        verbose_name=_('Находится ли в корзине'),
+        verbose_name=_('Добавить в покупки'),
         blank=True, default=False
     )
     name = models.CharField(
@@ -141,3 +142,13 @@ class RecipeIngredient(models.Model):
         verbose_name = _('Ингредиент')
         verbose_name_plural = _('Ингредиенты')
         ordering = ('id',)
+
+
+class UserWithRecipes(models.Model):
+    user_recipes_count = models.IntegerField(
+        verbose_name=_('Количество рецептов пользователя')
+    )
+
+    @property
+    def count_recipes(self):
+        return self.recipes.count()
