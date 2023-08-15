@@ -30,7 +30,7 @@ class RecipeMinifiedSerializer(serializers.ModelSerializer):
 
 class CustomUserSerializer(serializers.ModelSerializer):
     """Serializer модели CustomUser"""
-    is_subscribed = serializers.SerializerMethodField(method_name='is_subscribed_user')
+    is_subscribed = serializers.SerializerMethodField()
     recipes = RecipeMinifiedSerializer(many=True, read_only=True)
     recipes_count = serializers.IntegerField(read_only=True)
 
@@ -40,7 +40,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
                   'is_subscribed', 'recipes', 'recipes_count')
         read_only_fields = ('id',)
 
-    def is_subscribed_user(self, obj):
+    def get_is_subscribed(self, obj):
         request = self.context.get("request")
         is_subscribed = request.query_params.get("is_subscribed", False)
 

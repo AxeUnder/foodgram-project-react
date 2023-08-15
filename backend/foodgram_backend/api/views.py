@@ -85,7 +85,7 @@ class CustomUserViewSet(UserViewSet):
         return paginated_response
 
     @action(detail=True, methods=['post'], url_path='subscribe', url_name='subscribe')
-    def subscribe(self, request, pk=None):
+    def subscribe(self, request, id=None):
         if request.user.is_anonymous:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
@@ -104,7 +104,7 @@ class CustomUserViewSet(UserViewSet):
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['delete'], url_path='unsubscribe', url_name='unsubscribe')
-    def unsubscribe(self, request, pk=None):
+    def unsubscribe(self, request, id=None):
         if request.user.is_anonymous:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 

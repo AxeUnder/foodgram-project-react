@@ -6,8 +6,8 @@ from .views import CustomUserViewSet, TagViewSet, TagListView, RecipeViewSet
 
 router = routers.DefaultRouter()
 router.register(r'users', CustomUserViewSet, basename='users')
-# router.register(r'users', CustomUserViewSet, basename='users-list')
-# router.register(r'users/set_password', CustomUserViewSet, basename='set_password')
+router.register(r'users', CustomUserViewSet, basename='users-list')
+router.register(r'users/set_password', CustomUserViewSet, basename='set_password')
 router.register(r'recipes', RecipeViewSet, basename='recipes')
 router.register(r'recipes', RecipeViewSet, basename='recipes-list')
 
