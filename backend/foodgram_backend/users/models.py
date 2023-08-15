@@ -52,9 +52,12 @@ class CustomUser(AbstractUser):
         default=USER,
         choices=CHOICES_ROLE
     )
-    recipes_count = models.PositiveIntegerField(
-        verbose_name=_('Общее количество рецептов пользователя'),
-        default=0
+    following = models.ManyToManyField(
+        "self",
+        through='Subscription',
+        through_fields=('user', 'author'),
+        symmetrical=False,
+        related_name='followers'
     )
 
     class Meta:
@@ -75,24 +78,29 @@ class CustomUser(AbstractUser):
 
 
 class Subscription(models.Model):
-    """Модель подписчиков"""
+    """Модель подписок"""
     user = models.ForeignKey(
         CustomUser,
         verbose_name=_('Подписчик'),
         on_delete=models.CASCADE,
-        related_name='follower'
+        related_name='subscribers'
     )
     author = models.ForeignKey(
         CustomUser,
         verbose_name=_('Автор'),
         on_delete=models.CASCADE,
-        related_name='following'
+        related_name='subscriptions'
     )
 
     class Meta:
         verbose_name = _('Подписчик')
         verbose_name_plural = _('Подписчики')
         ordering = ('id',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'], name='unique_subscripting'
+            ),
+        ]
 
     def __str__(self):
-        return f'{self.user} подписан на {self.author}'
+        return f'{self.user} >> {self.author}'

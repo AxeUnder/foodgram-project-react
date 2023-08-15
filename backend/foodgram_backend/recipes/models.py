@@ -142,13 +142,3 @@ class RecipeIngredient(models.Model):
         verbose_name = _('Ингредиент')
         verbose_name_plural = _('Ингредиенты')
         ordering = ('id',)
-
-
-class UserWithRecipes(models.Model):
-    user_recipes_count = models.IntegerField(
-        verbose_name=_('Количество рецептов пользователя')
-    )
-
-    @property
-    def count_recipes(self):
-        return self.recipes.count()

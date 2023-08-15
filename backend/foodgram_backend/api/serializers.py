@@ -1,11 +1,12 @@
 # api/serializers.py
 import base64
+from multiprocessing import Value
 
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
-from recipes.models import Tag, Recipe, RecipeIngredient, Ingredient, UserWithRecipes
-from users.models import CustomUser
+from recipes.models import Tag, Recipe, RecipeIngredient, Ingredient
+from users.models import CustomUser, Subscription
 
 
 class Base64ImageField(serializers.ImageField):
@@ -19,29 +20,60 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
+class RecipeMinifiedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+        read_only_fields = ('id',)
+
+
 class CustomUserSerializer(serializers.ModelSerializer):
     """Serializer модели CustomUser"""
-    user_recipes_count = serializers.IntegerField(
-        source='recipes_count'
-    )
+    is_subscribed = serializers.SerializerMethodField(method_name='is_subscribed_user')
+    recipes = RecipeMinifiedSerializer(many=True, read_only=True)
+    recipes_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = CustomUser
-        fields = (
-            'id',
-            'email',
-            'username',
-            'first_name',
-            'last_name',
-            'is_subscribed',
-            'user_recipes_count'
-        )
+        fields = ('id', 'email', 'username', 'first_name', 'last_name',
+                  'is_subscribed', 'recipes', 'recipes_count')
         read_only_fields = ('id',)
 
-    def get_recipes_count(self, instance):
-        if self.context.get('show_recipes_count'):
-            return instance.recipes_count
-        return None
+    def is_subscribed_user(self, obj):
+        request = self.context.get("request")
+        is_subscribed = request.query_params.get("is_subscribed", False)
+
+        if is_subscribed:
+            user = request.user
+            subscribed = user.following.filter(pk=obj.pk).exists()
+            return subscribed
+        else:
+            return False
+
+
+def always_true(*args, **kwargs):
+    return True
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    is_subscribed = serializers.BooleanField(default=True)
+
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'is_subscribed', 'recipes')
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        recipes_limit = int(self.context.get('recipes_limit', 0))
+
+        if recipes_limit is not None:
+            recipes_queryset = instance.recipes.all()[:recipes_limit]
+        else:
+            recipes_queryset = instance.recipes.all()
+
+        representation['recipes'] = RecipeMinifiedSerializer(recipes_queryset, many=True).data
+        return representation
 
 
 class CustomUserSignUpSerializer(serializers.ModelSerializer):
@@ -107,13 +139,7 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
         fields = ('id', 'amount')
 
 
-class SubscriptionSerializer(serializers.ModelSerializer):
-    """Serializer для подписок пользователей"""
-    recipes = RecipeSerializer(many=True, read_only=True)
 
-    class Meta:
-        model = CustomUser
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'is_subscribed', 'recipes')
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
