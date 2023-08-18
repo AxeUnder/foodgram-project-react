@@ -4,3 +4,9 @@ djoser==2.1.0
 pytz==2022.06
 psycopg2-binary==2.9.6
 python-dotenv==1.0.0
+requests==2.26.0
+flake8
+django-filter==23.1
+PyJWT==2.1.0
+gunicorn
+Pillow
