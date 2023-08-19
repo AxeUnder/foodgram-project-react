@@ -54,16 +54,22 @@ def always_true(*args, **kwargs):
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(source='author.email')
-    username = serializers.CharField(source='author.username')
-    first_name = serializers.CharField(source='author.first_name')
-    last_name = serializers.CharField(source='author.last_name')
+    email = serializers.ReadOnlyField(source='author.email')
+    id = serializers.ReadOnlyField(source='author.id')
+    username = serializers.ReadOnlyField(source='author.username')
+    first_name = serializers.ReadOnlyField(source='author.first_name')
+    last_name = serializers.ReadOnlyField(source='author.last_name')
+    is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Subscription
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'recipes', 'recipes_count')
+        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'is_subscribed', 'recipes', 'recipes_count')
+
+    def get_is_subscribed(self, obj):
+        user = self.context['request'].user
+        return Subscription.objects.filter(user=user, author=obj.author).exists()
 
     def get_recipes(self, obj):
         recipes = Recipe.objects.filter(author=obj.author)
