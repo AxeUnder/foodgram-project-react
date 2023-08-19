@@ -1,6 +1,7 @@
 # api/view.py
 from datetime import date
 
+from django.contrib.auth import get_user_model
 from django.db.models import Count, Exists, OuterRef
 from django.shortcuts import get_object_or_404
 from djoser.serializers import SetPasswordSerializer
@@ -43,85 +44,65 @@ class CustomUserViewSet(UserViewSet):
         subscribed_recipes = Recipe.objects.filter(author__in=subscribed_users, pub_date__lte=date.today())
         return subscribed_recipes
 
+    def paginate_and_serialize(self, queryset):
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={"request": self.request})
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True, context={"request": self.request})
+        return Response(serializer.data)
+
     def list(self, request, *args, **kwargs):
         is_subscribed = request.query_params.get('is_subscribed', False)
 
         if is_subscribed:
             user = request.user
-            subscribed = Exists(Subscription.objects.filter(user=user, author=OuterRef('pk')))
-            queryset = CustomUser.objects.annotate(is_subscribed=subscribed,
-                                                   recipes_count=Count('recipes'))
-            queryset = queryset.filter(is_subscribed=True)
+            queryset = CustomUser.objects.prefetch_related('recipes').filter(subscriptions__user=user)
         else:
-            queryset = CustomUser.objects.all().annotate(recipes_count=Count('recipes'))
+            queryset = CustomUser.objects.prefetch_related('recipes').all()
 
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True, context={"request": request})
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True, context={"request": request})
-        return Response(serializer.data)
+        return self.paginate_and_serialize(queryset)
 
     @action(detail=False, methods=['get'], url_path='subscriptions', url_name='list_subscriptions')
     def list_subscriptions(self, request):
         if request.user.is_anonymous:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-        subscribed_authors = CustomUser.objects.filter(subscriptions__user=request.user)
-        page = self.paginate_queryset(subscribed_authors)
+        subscriptions = Subscription.objects.filter(user=request.user)
+        page = self.paginate_queryset(subscriptions)
 
-        recipes_limit = int(request.query_params.get('recipes_limit', 0))
-        response_serializer = SubscriptionSerializer(page, many=True,
-                                                     context={'request': request, 'recipes_limit': recipes_limit})
+        response_serializer = SubscriptionSerializer(page, many=True, context={'request': request})
 
-        # Used list comprehension to set all is_subscribed to True
-        serialized_data = [{**item, "is_subscribed": True} for item in response_serializer.data]
-
-        # Create paginated_response and set the results to the updated serialized_data
         paginated_response = self.get_paginated_response(response_serializer.data)
-        paginated_response.data["results"] = serialized_data
 
         return paginated_response
 
-    @action(detail=True, methods=['post'], url_path='subscribe', url_name='subscribe')
-    def subscribe(self, request, id=None):
-        if request.user.is_anonymous:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
+    @action(detail=True, methods=['post', 'delete'], url_path='subscribe', url_name='subscribe')
+    def subscribe(self, request, pk=None, **kwargs):
+        target_user = get_object_or_404(get_user_model(), id=pk)
 
-        author = self.get_object()
-
-        if Subscription.objects.filter(user=request.user, author=author).exists():
-            return Response({"Вы уже подписаны на этого пользователя"},
+        if request.user.pk == target_user.pk:
+            return Response({"detail": "Невозможно подписаться на самого себя."},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        Subscription.objects.create(user=request.user, author=author)
+        if request.method == 'POST':
+            subscription, created = Subscription.objects.get_or_create(user=request.user, author=target_user)
+            if created:
+                return Response({"detail": "Подписка успешно добавлена"},
+                                status=status.HTTP_201_CREATED)
+            else:
+                return Response({"detail": "Вы уже подписаны на этого пользователя"},
+                                status=status.HTTP_400_BAD_REQUEST)
 
-        recipes_limit = int(request.query_params.get('recipes_limit', 0))
-        response_serializer = SubscriptionSerializer(author, context={'request': request,
-                                                                      'recipes_limit': recipes_limit})
-        response_serializer.data["is_subscribed"] = True
-        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
-
-    @action(detail=True, methods=['delete'], url_path='unsubscribe', url_name='unsubscribe')
-    def unsubscribe(self, request, id=None):
-        if request.user.is_anonymous:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-
-        author = self.get_object()
-
-        subscription = Subscription.objects.filter(user=request.user, author=author).first()
-
-        if not subscription:
-            return Response({"Вы не подписаны на этого пользователя"},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        subscription.delete()
-        recipes_limit = int(request.query_params.get('recipes_limit', 0))
-        response_serializer = SubscriptionSerializer(author, context={'request': request,
-                                                                      'recipes_limit': recipes_limit})
-        response_serializer.data["is_subscribed"] = False
-        return Response(response_serializer.data, status=status.HTTP_204_NO_CONTENT)
+        elif request.method == 'DELETE':
+            try:
+                subscription = Subscription.objects.get(user=request.user, author=target_user)
+                subscription.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            except Subscription.DoesNotExist:
+                return Response({"detail": "Подписка не найдена"},
+                                status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=False, methods=['POST'])
     def set_password(self, request):
@@ -145,7 +126,7 @@ class CustomUserViewSet(UserViewSet):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        recipes_limit = self.context.get('recipes_limit', None)
+        recipes_limit = self.request.query_params.get('recipes_limit', None)
 
         if recipes_limit is not None:
             recipes_queryset = instance.recipes.all()[:recipes_limit]
@@ -207,7 +188,7 @@ class RecipeViewSet(ModelViewSet):
 
     def get_queryset(self):
         """Оптимизация запросов"""
-        recipes = Recipe.objects.prefetch_related(
+        recipes = Recipe.objects.select_related('author').prefetch_related(
             'recipe_ingredients__ingredient', 'tags'
         ).all()
         return recipes

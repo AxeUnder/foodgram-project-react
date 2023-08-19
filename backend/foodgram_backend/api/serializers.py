@@ -42,14 +42,11 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get("request")
-        is_subscribed = request.query_params.get("is_subscribed", False)
-
-        if is_subscribed:
-            user = request.user
-            subscribed = user.following.filter(pk=obj.pk).exists()
-            return subscribed
+        if request is not None:
+            is_subscribed = request.query_params.get("is_subscribed", False)
         else:
-            return False
+            is_subscribed = False
+        return is_subscribed
 
 
 def always_true(*args, **kwargs):
@@ -57,23 +54,23 @@ def always_true(*args, **kwargs):
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
-    is_subscribed = serializers.BooleanField(default=True)
+    email = serializers.EmailField(source='author.email')
+    username = serializers.CharField(source='author.username')
+    first_name = serializers.CharField(source='author.first_name')
+    last_name = serializers.CharField(source='author.last_name')
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
 
     class Meta:
-        model = CustomUser
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'is_subscribed', 'recipes')
+        model = Subscription
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'recipes', 'recipes_count')
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        recipes_limit = int(self.context.get('recipes_limit', 0))
+    def get_recipes(self, obj):
+        recipes = Recipe.objects.filter(author=obj.author)
+        return RecipeMinifiedSerializer(recipes, many=True, context=self.context).data
 
-        if recipes_limit is not None:
-            recipes_queryset = instance.recipes.all()[:recipes_limit]
-        else:
-            recipes_queryset = instance.recipes.all()
-
-        representation['recipes'] = RecipeMinifiedSerializer(recipes_queryset, many=True).data
-        return representation
+    def get_recipes_count(self, obj):
+        return Recipe.objects.filter(author=obj.author).count()
 
 
 class CustomUserSignUpSerializer(serializers.ModelSerializer):
@@ -137,9 +134,6 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeIngredient
         fields = ('id', 'amount')
-
-
-
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
