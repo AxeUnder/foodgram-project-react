@@ -41,12 +41,8 @@ class CustomUserSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
     def get_is_subscribed(self, obj):
-        request = self.context.get("request")
-        if request is not None:
-            is_subscribed = request.query_params.get("is_subscribed", False)
-        else:
-            is_subscribed = False
-        return is_subscribed
+        user = self.context['request'].user
+        return Subscription.objects.filter(user=user, author=obj).exists()
 
 
 def always_true(*args, **kwargs):
