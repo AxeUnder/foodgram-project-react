@@ -31,13 +31,11 @@ class RecipeMinifiedSerializer(serializers.ModelSerializer):
 class CustomUserSerializer(serializers.ModelSerializer):
     """Serializer модели CustomUser"""
     is_subscribed = serializers.SerializerMethodField()
-    recipes = RecipeMinifiedSerializer(many=True, read_only=True)
-    recipes_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = CustomUser
-        fields = ('id', 'email', 'username', 'first_name', 'last_name',
-                  'is_subscribed', 'recipes', 'recipes_count')
+        fields = ('email', 'id', 'username', 'first_name', 'last_name',
+                  'is_subscribed')
         read_only_fields = ('id',)
 
     def get_is_subscribed(self, obj):
@@ -91,7 +89,6 @@ class CustomUserSignUpSerializer(serializers.ModelSerializer):
 
 class TagSerializer(serializers.ModelSerializer):
     """Serializer модели Tag"""
-
     class Meta:
         model = Tag
         fields = ('id', 'name', 'color', 'slug')
@@ -99,7 +96,6 @@ class TagSerializer(serializers.ModelSerializer):
 
 class IngredientSerializer(serializers.ModelSerializer):
     """Сериализатор для ингредиентов"""
-
     class Meta:
         model = Ingredient
         fields = ('id', 'name', 'measurement_unit')
@@ -150,6 +146,7 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
 class RecipeCreateSerializer(serializers.ModelSerializer):
     """Serializer создания объектов в модели Recipe"""
     ingredients = RecipeIngredientCreateSerializer(many=True)
+    image = Base64ImageField()
 
     class Meta:
         model = Recipe
@@ -175,4 +172,4 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance):
-        return RecipeSerializer(instance).data
+        return RecipeSerializer(instance, context=self.context).data
