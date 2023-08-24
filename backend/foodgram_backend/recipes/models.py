@@ -38,7 +38,6 @@ class Recipe(models.Model):
         Tag,
         verbose_name=_('Список тегов'),
         help_text='Выставите теги',
-        related_name='tags'
     )
     author = models.ForeignKey(
         get_user_model(),
@@ -177,7 +176,7 @@ class Favorite(models.Model):
 
 
 class ShoppingCart(models.Model):
-    """ Модель Корзина покупок """
+    """ Модель корзины покупок """
     user = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,

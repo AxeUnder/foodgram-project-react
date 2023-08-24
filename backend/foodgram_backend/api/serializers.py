@@ -5,7 +5,7 @@ from multiprocessing import Value
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
-from recipes.models import Tag, Recipe, RecipeIngredient, Ingredient
+from recipes.models import Tag, Recipe, RecipeIngredient, Ingredient, Favorite, ShoppingCart
 from users.models import CustomUser, Subscription
 
 
@@ -119,6 +119,8 @@ class RecipeSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientSerializer(many=True, source='recipe_ingredients')
     image = Base64ImageField()
     author = CustomUserSerializer(read_only=True)
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -129,6 +131,14 @@ class RecipeSerializer(serializers.ModelSerializer):
             instance.recipe_ingredients.all(),
             many=True
         ).data
+
+    def get_is_favorited(self, obj):
+        user = self.context['request'].user
+        return Favorite.objects.filter(user=user, recipe=obj).exists()
+
+    def get_is_in_shopping_cart(self, obj):
+        user = self.context['request'].user
+        return ShoppingCart.objects.filter(user=user, recipe=obj).exists()
 
 
 class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
@@ -147,6 +157,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     """Serializer создания объектов в модели Recipe"""
     ingredients = RecipeIngredientCreateSerializer(many=True)
     image = Base64ImageField()
+    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True)
 
     class Meta:
         model = Recipe

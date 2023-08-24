@@ -19,5 +19,6 @@ urlpatterns = [
     path('tags/<int:pk>/', TagViewSet.as_view({'get': 'retrieve'}), name='tag-detail'),
     path('users/subscriptions/', SubscriptionViewSet.as_view({'get': 'list_subscriptions'}), name='subscriptions-list'),
     path('users/<int:id>/subscribe/', SubscriptionViewSet.as_view({'post': 'subscribe', 'delete': 'unsubscribe'}), name='subscribe-unsubscribe'),
+    path('recipes/<int:pk>/favorite/', RecipeViewSet.as_view({'post': 'add_favorite', 'delete': 'remove_favorite'}), name='add_favorite-remove_favorite'),
     path('', include(router.urls)),
 ]

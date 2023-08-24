@@ -194,6 +194,7 @@ class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
     pagination_class = LimitOffsetPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
     def dispatch(self, request, *args, **kwargs):
         """Логи запросов к db"""
@@ -211,11 +212,6 @@ class RecipeViewSet(ModelViewSet):
         queryset = Recipe.objects.select_related('author').prefetch_related(
             'recipe_ingredients__ingredient', 'tags'
         ).all()
-
-        # Фильтрация по автору
-        author_id = self.request.query_params.get('author', None)
-        if author_id is not None:
-            queryset = queryset.filter(author_id=author_id)
 
         # Фильтрация по тегам
         tags = self.request.query_params.getlist('tags', [])
@@ -238,19 +234,22 @@ class RecipeViewSet(ModelViewSet):
 
         return queryset
 
-    @action(detail=True, methods=["post"], url_path='favorite', url_name='add_favorite')
-    def add_to_favorite(self, request, pk=None):
+    @action(detail=True, methods=["post"], url_path='favorite', url_name='add_favorite', permission_classes=[IsAuthenticated])
+    def add_favorite(self, request, pk=None):
         user = request.user
         recipe = self.get_object()
 
         if not recipe.favorites_recipe.filter(user=user).exists():
             recipe.favorites_recipe.create(user=user)
-            return Response(status=status.HTTP_201_CREATED)
+            serializer = RecipeMinifiedSerializer(recipe, context={"request": request})
+            response_data = {"id": serializer.data["id"], "name": serializer.data["name"],
+                             "image": serializer.data["image"], "cooking_time": serializer.data["cooking_time"]}
+            return Response(data=response_data, status=status.HTTP_201_CREATED)
         else:
             return Response({"errors": "Рецепт уже в избранном"}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=["delete"], url_path='favorite', url_name='remove_favorite')
-    def remove_from_favorite(self, request, pk=None):
+    @action(detail=True, methods=["delete"], url_path='favorite', url_name='remove_favorite', permission_classes=[IsAuthenticated])
+    def remove_favorite(self, request, pk=None):
         user = request.user
         recipe = self.get_object()
 
