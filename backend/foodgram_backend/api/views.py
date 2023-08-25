@@ -1,8 +1,7 @@
 # api/view.py
 from datetime import date
 
-from django.contrib.auth import get_user_model
-from django.db.models import Count, Exists, OuterRef
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from djoser.serializers import SetPasswordSerializer
 from djoser.views import UserViewSet
@@ -24,6 +23,7 @@ from .serializers import (
     RecipeSerializer, IngredientSerializer,
     RecipeCreateSerializer, RecipeMinifiedSerializer, SubscriptionSerializer
 )
+from .utils import process_shopping_list, generate_shopping_list_pdf
 
 
 class CustomUserViewSet(UserViewSet):
@@ -268,3 +268,48 @@ class RecipeViewSet(ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
         self.request.user.save()
+
+
+class ShoppingCartViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = RecipeMinifiedSerializer
+
+    @action(detail=True, methods=["post"], url_path='shopping_cart', url_name='add_to_shopping_cart',
+            permission_classes=[IsAuthenticated])
+    def add_recipe(self, request, id=None):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=id)
+
+        if not recipe.shopping_cart.filter(user=user).exists():
+            recipe.shopping_cart.create(user=user)
+            serializer = RecipeMinifiedSerializer(recipe, context={"request": request})
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"errors": "Рецепт уже в списке покупок"}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=["delete"], url_path='shopping_cart', url_name='remove_from_shopping_cart',
+            permission_classes=[IsAuthenticated])
+    def remove_recipe(self, request, id=None):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=id)
+
+        shopping_cart_instance = recipe.shopping_cart.filter(user=user).first()
+        if shopping_cart_instance:
+            shopping_cart_instance.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({"errors": "Рецепт не найден в списке покупок"}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=["delete"], url_path='shopping_cart', url_name='download_shopping_cart',
+            permission_classes=[IsAuthenticated])
+    def download_shopping_cart(self, request):
+        user = request.user
+        current_user_shopping_list = Recipe.objects.filter(shopping_cart__user=user)
+        shopping_list_items = process_shopping_list(current_user_shopping_list)
+        pdf = generate_shopping_list_pdf(shopping_list_items, user)
+
+        response = FileResponse(pdf, content_type='application/pdf')
+        filename = f'{user.username}_shopping_cart.pdf'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+        return response
