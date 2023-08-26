@@ -98,7 +98,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
-CSV_DIR = os.path.join(BASE_DIR, 'static')
+CSV_DIR = os.path.join(BASE_DIR, 'data')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
