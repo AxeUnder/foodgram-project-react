@@ -157,7 +157,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     """Serializer создания объектов в модели Recipe"""
     ingredients = RecipeIngredientCreateSerializer(many=True)
     image = Base64ImageField()
-    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True)
+    tags = serializers.PrimaryKeyRelatedField(many=True, queryset=Tag.objects.all(), required=True)
 
     class Meta:
         model = Recipe
@@ -171,15 +171,43 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
+        tags = validated_data.pop('tags', [])
         author = self.context.get('request').user
         ingredients = validated_data.pop('ingredients')
         instance = super().create(validated_data)
+        instance.tags.set(tags)
         for ingredient_data in ingredients:
             RecipeIngredient(
                 recipe=instance,
                 ingredient=ingredient_data['ingredient'],
                 amount=ingredient_data['amount']
             ).save()
+        return instance
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.text = validated_data.get('text', instance.text)
+        instance.cooking_time = validated_data.get('cooking_time', instance.cooking_time)
+        instance.image.delete()
+        instance.image = validated_data.get('image', instance.image)
+
+        # Обновление тегов
+        new_tags = validated_data.pop('tags', [])
+        instance.tags.set(new_tags)
+
+        # Обновление ингредиентов
+        new_ingredients_data = validated_data.pop('ingredients', [])
+        existing_recipe_ingredients = instance.recipe_ingredients.all()
+        existing_recipe_ingredients.delete()
+
+        for ingredient_data in new_ingredients_data:
+            RecipeIngredient.objects.create(
+                recipe=instance,
+                ingredient=ingredient_data['ingredient'],
+                amount=ingredient_data['amount']
+            )
+
+        instance.save()
         return instance
 
     def to_representation(self, instance):

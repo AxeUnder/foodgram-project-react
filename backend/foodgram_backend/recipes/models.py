@@ -90,7 +90,8 @@ class Recipe(models.Model):
     pub_date = models.DateTimeField(
         verbose_name=_('Дата публикации'),
         auto_now_add=True,
-        db_index=True
+        db_index=True,
+        editable=False
     )
 
     class Meta:

@@ -5,8 +5,11 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from djoser.serializers import SetPasswordSerializer
 from djoser.views import UserViewSet
+from django.utils.translation import gettext_lazy as _
+
 from rest_framework import status, viewsets, filters
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
@@ -262,6 +265,8 @@ class RecipeViewSet(ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == 'create':
+            return RecipeCreateSerializer
+        if self.action == 'update' or self.action == 'partial_update':
             return RecipeCreateSerializer
         return RecipeSerializer
 
