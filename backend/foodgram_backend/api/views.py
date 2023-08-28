@@ -5,13 +5,10 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from djoser.serializers import SetPasswordSerializer
 from djoser.views import UserViewSet
-from django.utils.translation import gettext_lazy as _
 
 from rest_framework import status, viewsets, filters
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
-from rest_framework.filters import SearchFilter
-from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -35,7 +32,6 @@ class CustomUserViewSet(UserViewSet):
     serializer_class = CustomUserSerializer
     lookup_field = 'id'
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
-    pagination_class = LimitOffsetPagination
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
@@ -116,7 +112,6 @@ class CustomUserViewSet(UserViewSet):
 class SubscriptionViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = SubscriptionSerializer
-    pagination_class = LimitOffsetPagination
 
     def get_user(self, id):
         return get_object_or_404(CustomUser, id=id)
@@ -127,7 +122,7 @@ class SubscriptionViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'], url_path='subscriptions', url_name='list_subscriptions')
     def list_subscriptions(self, request):
         queryset = Subscription.objects.filter(user=request.user).order_by('-id')
-        paginator = LimitOffsetPagination()
+        paginator = PageNumberPagination()
         paginated_queryset = paginator.paginate_queryset(queryset, request)
         serializer = self.get_serializer(paginated_queryset, context={'request': request}, many=True)
         return paginator.get_paginated_response(serializer.data)
@@ -166,6 +161,7 @@ class TagViewSet(ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     http_method_names = ['get']
+    pagination_class = None
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -197,7 +193,6 @@ class RecipeViewSet(ModelViewSet):
     """ViewSet модели рецептов"""
     queryset = Recipe.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly]
-    pagination_class = LimitOffsetPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
@@ -306,6 +301,7 @@ class RecipeViewSet(ModelViewSet):
 class ShoppingCartViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = RecipeMinifiedSerializer
+    pagination_class = None
 
     @action(detail=True, methods=["delete"], url_path='shopping_cart', url_name='download_shopping_cart',
             permission_classes=[IsAuthenticated])
@@ -317,6 +313,6 @@ class ShoppingCartViewSet(viewsets.ViewSet):
 
         response = FileResponse(pdf, content_type='application/pdf')
         filename = f'{user.username}_shopping_cart.pdf'
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response['Content-Disposition'] = f'attachment; filename={filename}'
 
         return response

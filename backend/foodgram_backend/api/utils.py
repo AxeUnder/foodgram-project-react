@@ -45,7 +45,7 @@ def generate_shopping_list_pdf(shopping_list, user):
     doc = SimpleDocTemplate(buffer, pagesize=letter, title="Shopping List")
 
     data = [
-        ['Ingredient', 'Amount']
+        ['Ингредиенты', 'Количество']
     ]
     for ingredient in shopping_list:
         data.append([ingredient[0], f'{ingredient[1]} {ingredient[2]}'])
