@@ -1,6 +1,5 @@
 # api/serializers.py
 import base64
-from multiprocessing import Value
 
 from django.core.files.base import ContentFile
 from rest_framework import serializers
@@ -40,7 +39,10 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
-        return Subscription.objects.filter(user=user, author=obj).exists()
+        if user.is_authenticated:
+            return Subscription.objects.filter(user=user, author=obj).exists()
+        else:
+            return False
 
 
 def always_true(*args, **kwargs):
@@ -134,11 +136,15 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         user = self.context['request'].user
-        return Favorite.objects.filter(user=user, recipe=obj).exists()
+        if user.is_authenticated:
+            return Favorite.objects.filter(user=user, recipe=obj).exists()
+        return False
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context['request'].user
-        return ShoppingCart.objects.filter(user=user, recipe=obj).exists()
+        if user.is_authenticated:
+            return ShoppingCart.objects.filter(user=user, recipe=obj).exists()
+        return False
 
 
 class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
@@ -177,11 +183,11 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         instance = super().create(validated_data)
         instance.tags.set(tags)
         for ingredient_data in ingredients:
-            RecipeIngredient(
+            RecipeIngredient.objects.create(
                 recipe=instance,
                 ingredient=ingredient_data['ingredient'],
                 amount=ingredient_data['amount']
-            ).save()
+            )
         return instance
 
     def update(self, instance, validated_data):

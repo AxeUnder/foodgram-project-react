@@ -52,14 +52,6 @@ class Recipe(models.Model):
         through_fields=('recipe', 'ingredient'),
         help_text='Выберете ингредиенты'
     )
-    is_favorited = models.BooleanField(
-        verbose_name=_('Добавить в избранное'),
-        blank=True, default=False
-    )
-    is_in_shopping_cart = models.BooleanField(
-        verbose_name=_('Добавить в покупки'),
-        blank=True, default=False
-    )
     name = models.CharField(
         verbose_name=_('Название'),
         max_length=200,
@@ -67,7 +59,7 @@ class Recipe(models.Model):
     )
     image = models.ImageField(
         verbose_name=_('Ссылка на картинку на сайте'),
-        upload_to='recipes',
+        upload_to='rescipes/',
         blank=True,
         null=True,
         help_text='Загрузите картинку'
