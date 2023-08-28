@@ -3,9 +3,7 @@ import csv
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
-
 from recipes.models import Ingredient
-
 
 ModelsCSV = {
     Ingredient: 'ingredients.csv',
@@ -31,7 +29,8 @@ class Command(BaseCommand):
 
                 header = reader.fieldnames
                 if header != EXPECTED_HEADER:
-                    raise ValueError('Неверный формат файла: неправильные заголовки полей.')
+                    raise ValueError(
+                        'Неверный формат файла: неправильные заголовки полей.')
 
                 model.objects.bulk_create(model(**data) for data in reader)
             self.stdout.write(

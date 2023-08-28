@@ -2,9 +2,10 @@
 import base64
 
 from django.core.files.base import ContentFile
+from recipes.models import (
+    Favorite, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Tag,
+)
 from rest_framework import serializers
-
-from recipes.models import Tag, Recipe, RecipeIngredient, Ingredient, Favorite, ShoppingCart
 from users.models import CustomUser, Subscription
 
 
@@ -61,15 +62,18 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subscription
-        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'is_subscribed', 'recipes', 'recipes_count')
+        fields = ('email', 'id', 'username', 'first_name',
+                  'last_name', 'is_subscribed', 'recipes', 'recipes_count')
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
-        return Subscription.objects.filter(user=user, author=obj.author).exists()
+        return Subscription.objects.filter(user=user,
+                                           author=obj.author).exists()
 
     def get_recipes(self, obj):
         recipes = Recipe.objects.filter(author=obj.author)
-        return RecipeMinifiedSerializer(recipes, many=True, context=self.context).data
+        return RecipeMinifiedSerializer(recipes, many=True,
+                                        context=self.context).data
 
     def get_recipes_count(self, obj):
         return Recipe.objects.filter(author=obj.author).count()
@@ -78,7 +82,8 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 class CustomUserSignUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'password')
+        fields = ('id', 'email', 'username',
+                  'first_name', 'last_name', 'password')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
@@ -108,7 +113,8 @@ class RecipeIngredientSerializer(serializers. ModelSerializer):
     """Serializer модели RecipeIngredient"""
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.CharField(source='ingredient.name')
-    measurement_unit = serializers.CharField(source='ingredient.measurement_unit')
+    measurement_unit = serializers.CharField(
+        source='ingredient.measurement_unit')
 
     class Meta:
         model = RecipeIngredient
@@ -118,7 +124,8 @@ class RecipeIngredientSerializer(serializers. ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     """Serializer модели Recipe"""
     tags = TagSerializer(many=True)
-    ingredients = RecipeIngredientSerializer(many=True, source='recipe_ingredients')
+    ingredients = RecipeIngredientSerializer(many=True,
+                                             source='recipe_ingredients')
     image = Base64ImageField()
     author = CustomUserSerializer(read_only=True)
     is_favorited = serializers.SerializerMethodField()
@@ -163,7 +170,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     """Serializer создания объектов в модели Recipe"""
     ingredients = RecipeIngredientCreateSerializer(many=True)
     image = Base64ImageField()
-    tags = serializers.PrimaryKeyRelatedField(many=True, queryset=Tag.objects.all(), required=True)
+    tags = serializers.PrimaryKeyRelatedField(many=True,
+                                              queryset=Tag.objects.all(),
+                                              required=True)
 
     class Meta:
         model = Recipe
@@ -193,7 +202,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.name = validated_data.get('name', instance.name)
         instance.text = validated_data.get('text', instance.text)
-        instance.cooking_time = validated_data.get('cooking_time', instance.cooking_time)
+        instance.cooking_time = validated_data.get('cooking_time',
+                                                   instance.cooking_time)
         instance.image.delete()
         instance.image = validated_data.get('image', instance.image)
 

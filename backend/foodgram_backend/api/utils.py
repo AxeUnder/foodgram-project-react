@@ -1,4 +1,5 @@
 # api/utils.py
+from collections import namedtuple
 from io import BytesIO
 
 from django.http import HttpResponse
@@ -8,9 +9,6 @@ from reportlab.lib.units import inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-
-from collections import namedtuple
-
 from rest_framework import permissions
 
 
@@ -27,8 +25,8 @@ def generate_shopping_list_pdf(shopping_list, user):
         canvas.saveState()
         canvas.setFont('Arial', 10)
 
-        header_text = "Website Header"
-        footer_text = "Website Footer"
+        header_text = "FoodGram"
+        footer_text = "AxeUnder"
         w, h = doc.pagesize
         canvas.drawString(inch, h - 0.5 * inch, header_text)
         canvas.drawString(inch, 0.5 * inch, footer_text)
@@ -68,16 +66,18 @@ def generate_shopping_list_pdf(shopping_list, user):
     return buffer
 
 
-ShoppingListItem = namedtuple('ShoppingListItem', ['name', 'amount', 'measurement_unit'])
+ShoppingListItem = namedtuple('ShoppingListItem',
+                              ['name', 'amount', 'measurement_unit'])
 
 
 def process_shopping_list(recipe_list):
     ingredients = {}
     for recipe in recipe_list:
-        for item in recipe.recipe_ingredients.select_related('ingredient').all():
-            key = (item.ingredient.name, item.ingredient.measurement_unit)
+        for _ in recipe.recipe_ingredients.select_related('ingredient').all():
+            key = (_.ingredient.name, _.ingredient.measurement_unit)
             if key not in ingredients:
                 ingredients[key] = 0
-            ingredients[key] += item.amount
+            ingredients[key] += _.amount
 
-    return [ShoppingListItem(name, amount, measurement_unit) for ((name, measurement_unit), amount) in ingredients.items()]
+    return [ShoppingListItem(name, amount, measurement_unit)
+            for ((name, measurement_unit), amount) in ingredients.items()]
