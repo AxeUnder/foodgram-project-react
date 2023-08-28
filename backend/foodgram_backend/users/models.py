@@ -1,6 +1,6 @@
 # users/models.py
-from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
@@ -57,7 +57,7 @@ class CustomUser(AbstractUser):
         through='Subscription',
         through_fields=('user', 'author'),
         symmetrical=False,
-        related_name='followers'
+        related_name='following_relationships'
     )
 
     class Meta:
@@ -89,7 +89,7 @@ class Subscription(models.Model):
         CustomUser,
         verbose_name=_('Автор'),
         on_delete=models.CASCADE,
-        related_name='subscriptions'
+        related_name='followed_by'
     )
 
     class Meta:
