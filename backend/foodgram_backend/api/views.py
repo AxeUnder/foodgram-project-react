@@ -113,26 +113,26 @@ class SubscriptionViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = SubscriptionSerializer
 
-    def get_user(self, id):
-        return get_object_or_404(CustomUser, id=id)
+    def get_user(self, pk):
+        return get_object_or_404(CustomUser, id=pk)
 
     def get_serializer(self, *args, **kwargs):
         return self.serializer_class(*args, **kwargs)
 
     @action(detail=False, methods=['get'], url_path='subscriptions', url_name='list_subscriptions')
     def list_subscriptions(self, request):
-        queryset = Subscription.objects.filter(user=request.user).order_by('-id')
+        queryset = Subscription.objects.filter(user=request.user).order_by('-pk')
         paginator = PageNumberPagination()
         paginated_queryset = paginator.paginate_queryset(queryset, request)
         serializer = self.get_serializer(paginated_queryset, context={'request': request}, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     @action(detail=True, methods=['post'], url_path='subscribe', url_name='subscribe')
-    def subscribe(self, request, id=None):
-        target_user = self.get_user(id)
+    def subscribe(self, request, pk=None):
+        target_user = self.get_user(pk)
 
         if request.user.pk == target_user.pk:
-            return Response({"errors": "Невозможно подписаться на самого себя."},
+            return Response({'errors': 'Невозможно подписаться на самого себя.'},
                             status=status.HTTP_400_BAD_REQUEST)
 
         subscription, created = Subscription.objects.get_or_create(user=request.user, author=target_user)
@@ -140,19 +140,19 @@ class SubscriptionViewSet(viewsets.ViewSet):
             serializer = self.serializer_class(subscription, context={'request': request})
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            return Response({"detail": "Вы уже подписаны на этого пользователя"},
+            return Response({'detail': 'Вы уже подписаны на этого пользователя'},
                             status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['delete'], url_path='subscribe', url_name='unsubscribe')
-    def unsubscribe(self, request, id=None):
-        target_user = self.get_user(id)
+    def unsubscribe(self, request, pk=None):
+        target_user = self.get_user(pk)
 
         try:
             subscription = Subscription.objects.get(user=request.user, author=target_user)
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Subscription.DoesNotExist:
-            return Response({"detail": "Подписка не найдена"},
+            return Response({'detail': 'Подписка не найдена'},
                             status=status.HTTP_404_NOT_FOUND)
 
 
