@@ -1,4 +1,5 @@
 import base64
+import uuid
 
 from django.core.files.base import ContentFile
 from django.db.transaction import atomic
@@ -16,9 +17,14 @@ class Base64ImageField(serializers.ImageField):
         if isinstance(data, str) and data.startswith('data:image'):
             img_format, img_str = data.split(';base64,')
             ext = img_format.split('/')[-1]
-            data = ContentFile(base64.b64decode(img_str), name='img.' + ext)
+            if ext.lower() not in ('jpeg', 'jpg', 'png'):
+                raise serializers.ValidationError(
+                    'Формат изображения не поддерживается. Используйте форматы JPEG или PNG.')
 
-        return super().to_internal_value(data)
+            uid = uuid.uuid4()
+            data = ContentFile(base64.b64decode(img_str), name=uid.urn[9:] + '.' + ext)
+
+        return super(Base64ImageField, self).to_internal_value(data)
 
 
 class RecipeMinifiedSerializer(serializers.ModelSerializer):
@@ -74,6 +80,80 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     def get_recipes_count(self, obj):
         return Recipe.objects.filter(author=obj.author).count()
+
+
+class SubscriptionCreateSerializer(serializers.Serializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+    author = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
+
+    class Meta:
+        model = Subscription
+        fields = ('user', 'author')
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        author = attrs['author']
+        if self.context['request'].method == 'POST':  # Создание подписки
+            if user == author:
+                raise serializers.ValidationError('Невозможно подписаться на самого себя')
+        elif self.context['request'].method == 'DELETE':  # Отмена подписки
+            try:
+                Subscription.objects.get(user=user, author=author)
+            except Subscription.DoesNotExist:
+                raise serializers.ValidationError('Подписка не найдена')
+        return attrs
+
+    def create(self, validated_data):
+        return Subscription.objects.create(**validated_data)
+
+
+class FavoriteCreteSerializer(serializers.Serializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
+
+    class Meta:
+        model = Favorite
+        fields = ('user', 'recipe')
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        recipe = attrs['recipe']
+        if self.context['request'].method == 'POST':
+            if Favorite.objects.filter(user=user, recipe=recipe).exists():
+                raise serializers.ValidationError('Рецепт уже в избранном')
+        elif self.context['request'].method == 'DELETE':
+            if not Favorite.objects.filter(user=user, recipe=recipe).exists():
+                raise serializers.ValidationError('Рецепт не найден в избранных')
+        return attrs
+
+    def create(self, validated_data):
+        return Favorite.objects.create(**validated_data)
+
+
+class ShoppingCartCreateSerializer(serializers.Serializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
+
+    class Meta:
+        model = ShoppingCart
+        fields = ('user', 'recipe')
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        recipe = attrs['recipe']
+
+        if self.context['request'].method == 'POST':
+            if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
+                raise serializers.ValidationError(
+                    'Рецепт уже в корзине')
+        elif self.context['request'].method == 'DELETE':
+            if not ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
+                raise serializers.ValidationError(
+                    'Рецепт не найден в корзине')
+        return attrs
+
+    def create(self, validated_data):
+        return ShoppingCart.objects.create(**validated_data)
 
 
 class CustomUserSignUpSerializer(serializers.ModelSerializer):
@@ -156,6 +236,13 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
         model = RecipeIngredient
         fields = ('id', 'amount')
 
+    def validate_amount(self, value):
+        if value < 1:
+            raise serializers.ValidationError('Количество не должно быть меньше 1')
+        if value > 100_000:
+            raise serializers.ValidationError('Количество не должно быть больше 100000')
+        return value
+
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
     """Serializer создания объектов в модели Recipe"""
@@ -175,6 +262,21 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'image',
             'pub_date'
         )
+
+    def validate_ingredients(self, ingredients):
+        if not ingredients:
+            raise serializers.ValidationError(
+                'Поле ингредиентов не может быть пустым')
+        return ingredients
+
+    def validate_cooking_time(self, value):
+        if int(value) < 1:
+            raise serializers.ValidationError(
+                'Время готовки не должно быть меньше минуты')
+        if int(value) > 1440:
+            raise serializers.ValidationError(
+                'Время готовки не должно быть больше суток')
+        return value
 
     @atomic(durable=True)
     def create(self, validated_data):
