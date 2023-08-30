@@ -13,7 +13,7 @@ if os.path.isfile(dotenv_file):
 
 SECRET_KEY = os.environ['SECRET_KEY']
 
-DEBUG = os.environ['DEBUG'].lower()
+DEBUG = os.environ['DEBUG'].lower() == 'true'
 
 ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
 
