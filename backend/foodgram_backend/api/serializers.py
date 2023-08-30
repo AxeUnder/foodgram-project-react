@@ -1,7 +1,8 @@
-# api/serializers.py
 import base64
 
 from django.core.files.base import ContentFile
+from django.db.transaction import atomic
+
 from recipes.models import (
     Favorite, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Tag,
 )
@@ -44,10 +45,6 @@ class CustomUserSerializer(serializers.ModelSerializer):
             return Subscription.objects.filter(user=user, author=obj).exists()
         else:
             return False
-
-
-def always_true(*args, **kwargs):
-    return True
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -135,12 +132,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         model = Recipe
         exclude = ('pub_date',)
 
-    def get_ingredients(self, instance):
-        return RecipeIngredientSerializer(
-            instance.recipe_ingredients.all(),
-            many=True
-        ).data
-
     def get_is_favorited(self, obj):
         user = self.context['request'].user
         if user.is_authenticated:
@@ -185,20 +176,25 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'pub_date'
         )
 
+    @atomic(durable=True)
     def create(self, validated_data):
         tags = validated_data.pop('tags', [])
         _ = self.context.get('request').user
         ingredients = validated_data.pop('ingredients')
         instance = super().create(validated_data)
         instance.tags.set(tags)
-        for ingredient_data in ingredients:
-            RecipeIngredient.objects.create(
+
+        recipe_ingredients = [
+            RecipeIngredient(
                 recipe=instance,
                 ingredient=ingredient_data['ingredient'],
                 amount=ingredient_data['amount']
-            )
+            ) for ingredient_data in ingredients
+        ]
+        RecipeIngredient.objects.bulk_create(recipe_ingredients)
         return instance
 
+    @atomic(durable=True)
     def update(self, instance, validated_data):
         instance.name = validated_data.get('name', instance.name)
         instance.text = validated_data.get('text', instance.text)
@@ -216,12 +212,14 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         existing_recipe_ingredients = instance.recipe_ingredients.all()
         existing_recipe_ingredients.delete()
 
-        for ingredient_data in new_ingredients_data:
-            RecipeIngredient.objects.create(
+        recipe_ingredients = [
+            RecipeIngredient(
                 recipe=instance,
                 ingredient=ingredient_data['ingredient'],
                 amount=ingredient_data['amount']
-            )
+            ) for ingredient_data in new_ingredients_data
+        ]
+        RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
         instance.save()
         return instance
