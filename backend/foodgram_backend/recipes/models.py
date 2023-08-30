@@ -1,6 +1,6 @@
 # recipes/models.py
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from users.models import CustomUser
@@ -74,6 +74,10 @@ class Recipe(models.Model):
             MinValueValidator(
                 1,
                 'Время готовки не должно быть меньше минуты'
+            ),
+            MaxValueValidator(
+                1440,
+                'Время готовки не должно быть больше суток'
             )
         ],
         help_text='Введите время готовки (мин.)'
@@ -112,6 +116,10 @@ class Ingredient(models.Model):
         verbose_name = _('Ингредиент')
         verbose_name_plural = _('Ингредиенты')
         ordering = ('id',)
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'measurement_unit'],
+                                    name='unique_ingredient')
+        ]
 
 
 class RecipeIngredient(models.Model):
@@ -128,7 +136,19 @@ class RecipeIngredient(models.Model):
         related_name='recipe_ingredients',
         on_delete=models.CASCADE
     )
-    amount = models.PositiveIntegerField(verbose_name=_('Количество'),)
+    amount = models.PositiveIntegerField(
+        verbose_name=_('Количество'),
+        validators=[
+            MinValueValidator(
+                1,
+                'Количество не должно быть меньше 1'
+            ),
+            MaxValueValidator(
+                100_000,
+                'Количество не должно быть больше 100.000'
+            )
+        ],
+    )
 
     class Meta:
         verbose_name = _('Ингредиент')
