@@ -318,18 +318,23 @@ class ShoppingCartViewSet(viewsets.ViewSet):
     serializer_class = RecipeMinifiedSerializer
     pagination_class = None
 
-    @action(detail=True, methods=["delete"], url_path='shopping_cart',
+    @action(detail=True, methods=['get'], url_path='shopping_cart',
             url_name='download_shopping_cart',
             permission_classes=[IsAuthenticated])
-    def download_shopping_cart(self, request):
+    def download_shopping_cart(self, request, file_ext='pdf'):
         user = request.user
         current_user_shopping_list = Recipe.objects.filter(
             shopping_cart__user=user)
         shopping_list_items = process_shopping_list(current_user_shopping_list)
-        pdf = generate_shopping_list_pdf(shopping_list_items, user)
 
-        response = FileResponse(pdf, content_type='application/pdf')
-        filename = f'{user.username}_shopping_cart.pdf'
-        response['Content-Disposition'] = f'attachment; filename={filename}'
+        if file_ext == 'pdf':
+            content_type = 'application/pdf'
+            buffer = generate_shopping_list_pdf(shopping_list_items, user)
+        else:
+            return Response({"detail": "Недопустимый формат файла. Допустимые форматы pdf"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        response = FileResponse(buffer, content_type=content_type)
+        response['Content-Disposition'] = f'attachment; filename="{user.username}_shopping_cart.{file_ext}"'
 
         return response

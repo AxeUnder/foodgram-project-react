@@ -1,3 +1,4 @@
+# api/serializers.py
 import base64
 import uuid
 

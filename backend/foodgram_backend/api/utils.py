@@ -1,6 +1,7 @@
 # api/utils.py
+import csv
 from collections import namedtuple
-from io import BytesIO
+from io import BytesIO, StringIO
 
 from django.http import HttpResponse
 from reportlab.lib import colors
@@ -32,9 +33,6 @@ def generate_shopping_list_pdf(shopping_list, user):
         canvas.drawString(inch, 0.5 * inch, footer_text)
 
         canvas.restoreState()
-    response = HttpResponse(content_type='application/pdf')
-    filename = f'{user.username}_shopping_cart.pdf'
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
     pdfmetrics.registerFont(
         TTFont('Arial', 'data/arial.ttf')
