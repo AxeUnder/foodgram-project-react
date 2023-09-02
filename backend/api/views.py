@@ -5,7 +5,6 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from djoser.serializers import SetPasswordSerializer
 from djoser.views import UserViewSet
-from recipes.models import Ingredient, Recipe, ShoppingCart, Tag, Favorite
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -13,13 +12,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
+
+from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from users.models import CustomUser, Subscription
 
 from .serializers import (
-    CustomUserSerializer, CustomUserSignUpSerializer, IngredientSerializer,
-    RecipeCreateSerializer, RecipeMinifiedSerializer, RecipeSerializer,
-    SubscriptionSerializer, TagSerializer, SubscriptionCreateSerializer,
-    FavoriteCreteSerializer, ShoppingCartCreateSerializer
+    CustomUserSerializer, CustomUserSignUpSerializer, FavoriteCreteSerializer,
+    IngredientSerializer, RecipeCreateSerializer, RecipeMinifiedSerializer,
+    RecipeSerializer, ShoppingCartCreateSerializer,
+    SubscriptionCreateSerializer, SubscriptionSerializer, TagSerializer,
 )
 from .utils import (
     IsAuthenticatedOrReadOnly, generate_shopping_list_pdf,
@@ -52,12 +53,12 @@ class CustomUserViewSet(UserViewSet):
         if page is not None:
             serializer = self.get_serializer(
                 page, many=True,
-                context={"request": self.request})
+                context={'request': self.request})
             return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(
             queryset, many=True,
-            context={"request": self.request})
+            context={'request': self.request})
         return Response(serializer.data)
 
     def list(self, request, *args, **kwargs):
@@ -146,8 +147,9 @@ class SubscriptionViewSet(viewsets.ViewSet):
             url_name='subscribe')
     def subscribe(self, request, pk=None):
         target_user = self.get_user(pk)
-        serializer = SubscriptionCreateSerializer(data={'author': target_user.id},
-                                                  context={'request': request})
+        serializer = SubscriptionCreateSerializer(
+            data={'author': target_user.id},
+            context={'request': request})
         serializer.is_valid(raise_exception=True)
         subscription = serializer.save(user=request.user)
         return Response(SubscriptionSerializer(
@@ -207,6 +209,7 @@ class RecipeViewSet(ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
+
     """
     def dispatch(self, request, *args, **kwargs):
         Логи запросов к db
@@ -219,6 +222,7 @@ class RecipeViewSet(ModelViewSet):
 
         return res
     """
+
     def get_queryset(self):
         """Оптимизация запросов"""
         queryset = Recipe.objects.select_related('author').prefetch_related(
@@ -264,8 +268,9 @@ class RecipeViewSet(ModelViewSet):
                                            context={'request': request})
         serializer.is_valid(raise_exception=True)
         favorite = serializer.save(user=request.user)
-        favorite_data = RecipeMinifiedSerializer(favorite.recipe,
-                                                 context={'request': request}).data
+        favorite_data = RecipeMinifiedSerializer(
+            favorite.recipe,
+            context={'request': request}).data
         return Response(data=favorite_data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['delete'], url_path='favorite',
@@ -274,7 +279,9 @@ class RecipeViewSet(ModelViewSet):
         serializer = FavoriteCreteSerializer(data={'recipe': pk},
                                               context={'request': request})
         serializer.is_valid(raise_exception=True)
-        favorite = Favorite.objects.get(user=request.user, recipe=serializer.validated_data['recipe'])
+        favorite = Favorite.objects.get(
+            user=request.user,
+            recipe=serializer.validated_data['recipe'])
         favorite.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -286,18 +293,22 @@ class RecipeViewSet(ModelViewSet):
                                                   context={'request': request})
         serializer.is_valid(raise_exception=True)
         shopping_cart = serializer.save(user=request.user)
-        shopping_cart_data = RecipeMinifiedSerializer(shopping_cart.recipe,
-                                                      context={'request': request}).data
+        shopping_cart_data = RecipeMinifiedSerializer(
+            shopping_cart.recipe,
+            context={'request': request}).data
         return Response(data=shopping_cart_data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["delete"], url_path='shopping_cart',
             url_name='remove_from_shopping_cart',
             permission_classes=[IsAuthenticated])
     def remove_shopping_cart(self, request, pk=None):
-        serializer = ShoppingCartCreateSerializer(data={'recipe': pk},
-                                              context={'request': request})
+        serializer = ShoppingCartCreateSerializer(
+            data={'recipe': pk},
+            context={'request': request})
         serializer.is_valid(raise_exception=True)
-        favorite = ShoppingCart.objects.get(user=request.user, recipe=serializer.validated_data['recipe'])
+        favorite = ShoppingCart.objects.get(
+            user=request.user,
+            recipe=serializer.validated_data['recipe'])
         favorite.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -331,10 +342,12 @@ class ShoppingCartViewSet(viewsets.ViewSet):
             content_type = 'application/pdf'
             buffer = generate_shopping_list_pdf(shopping_list_items, user)
         else:
-            return Response({"detail": "Недопустимый формат файла. Допустимые форматы pdf"},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': 'Недопустимый формат файла.'},
+                status=status.HTTP_400_BAD_REQUEST)
 
         response = FileResponse(buffer, content_type=content_type)
-        response['Content-Disposition'] = f'attachment; filename="{user.username}_shopping_cart.{file_ext}"'
+        filename = f'{user.username}_shopping_cart.{file_ext}'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
         return response

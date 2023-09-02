@@ -1,0 +1,42 @@
+version: '3'
+
+volumes:
+  pg_data_production_food:
+  static_volume_food:
+  media_volume_food:
+  docs:
+
+services:
+
+  db:
+    image: postgres:13.0-alpine
+    env_file: .env
+    volumes:
+      - pg_data_production_food:/var/lib/postgresql/data/
+    restart: always
+
+  backend:
+    image: axeunder/foodgram_backend:latest
+    env_file: .env
+    volumes:
+      - static_volume_food:/backend_static/
+      - media_volume_food:/backend_media/
+      - docs:/app/api/docs/
+    depends_on:
+      - db
+    restart: always
+
+  frontend:
+    image: axeunder/foodgram_frontend:latest
+    env_file: .env
+    command: cp -r /app/build/. /frontend_static/
+    volumes:
+      - static_volume_food:/frontend_static/
+
+  gateway:
+    image: axeunder/foodgram_gateway:latest
+    env_file: .env
+    ports:
+      - 9090:80
+    volumes:
+      - static_volume_food:/staticfiles/

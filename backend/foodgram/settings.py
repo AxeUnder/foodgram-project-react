@@ -1,19 +1,17 @@
-# foodgram_backend/settings.py
+# foodgram/settings.py
 import os
 
 from pathlib import Path
 
-import dotenv
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-dotenv_file = os.path.join(BASE_DIR, '.env')
-if os.path.isfile(dotenv_file):
-    dotenv.load_dotenv(dotenv_file)
+SECRET_KEY = os.getenv('SECRET_KEY')
 
-SECRET_KEY = os.environ['SECRET_KEY']
-
-DEBUG = os.environ['DEBUG'].lower() == 'true'
+DEBUG = os.getenv('DEBUG') == 'True'
 
 ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
 
@@ -43,7 +41,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'foodgram_backend.urls'
+ROOT_URLCONF = 'foodgram.urls'
 
 TEMPLATES = [
     {
@@ -61,12 +59,16 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'foodgram_backend.wsgi.application'
+WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.getenv('DB_ENGINE', default='django.db.backends.postgresql'),
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('PG_USER'),
+        'PASSWORD': os.getenv('PG_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT')
     }
 }
 
@@ -96,7 +98,7 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
+STATIC_ROOT = BASE_DIR / 'collected_static'
 
 CSV_DIR = os.path.join(BASE_DIR, 'data')
 

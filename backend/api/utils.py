@@ -1,5 +1,6 @@
 # api/utils.py
 import csv
+
 from collections import namedtuple
 from io import BytesIO, StringIO
 
@@ -26,8 +27,8 @@ def generate_shopping_list_pdf(shopping_list, user):
         canvas.saveState()
         canvas.setFont('Arial', 10)
 
-        header_text = "FoodGram"
-        footer_text = "AxeUnder"
+        header_text = 'FoodGram'
+        footer_text = 'AxeUnder'
         w, h = doc.pagesize
         canvas.drawString(inch, h - 0.5 * inch, header_text)
         canvas.drawString(inch, 0.5 * inch, footer_text)
@@ -38,7 +39,7 @@ def generate_shopping_list_pdf(shopping_list, user):
         TTFont('Arial', 'data/arial.ttf')
     )
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter, title="Shopping List")
+    doc = SimpleDocTemplate(buffer, pagesize=letter, title='Shopping List')
 
     data = [
         ['Ингредиенты', 'Количество']
