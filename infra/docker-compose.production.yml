@@ -4,7 +4,6 @@ volumes:
   pg_data_production_food:
   static_volume_food:
   media_volume_food:
-  docs:
 
 services:
 
@@ -13,7 +12,6 @@ services:
     env_file: .env
     volumes:
       - pg_data_production_food:/var/lib/postgresql/data/
-    restart: always
 
   backend:
     image: axeunder/foodgram_backend:latest
@@ -21,10 +19,8 @@ services:
     volumes:
       - static_volume_food:/backend_static/
       - media_volume_food:/backend_media/
-      - docs:/app/api/docs/
     depends_on:
       - db
-    restart: always
 
   frontend:
     image: axeunder/foodgram_frontend:latest
@@ -37,6 +33,6 @@ services:
     image: axeunder/foodgram_gateway:latest
     env_file: .env
     ports:
-      - 9090:80
+      - "8080:80"
     volumes:
       - static_volume_food:/staticfiles/

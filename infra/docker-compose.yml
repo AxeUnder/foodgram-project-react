@@ -4,7 +4,6 @@ volumes:
   pg_data_food:
   static_volume_food:
   media_volume_food:
-  docs_food:
 
 services:
 
@@ -13,7 +12,6 @@ services:
     env_file: .env
     volumes:
       - pg_data_food:/var/lib/postgresql/data/
-    restart: always
 
   backend:
     build:
@@ -21,8 +19,8 @@ services:
       dockerfile: Dockerfile
     env_file: .env
     volumes:
-      - static_volume_food:/backend_static/
-      - media_volume_food:/backend_media/
+      - static_volume_food:/app/static/
+      - media_volume_food:/app/media/
     depends_on:
       - db
     restart: always
@@ -32,18 +30,18 @@ services:
       context: ../frontend
       dockerfile: Dockerfile
     volumes:
-      - static_volume_food:/frontend_static/
+      - ../frontend/:/app/result_build/
 
   nginx:
     image: nginx:1.19.3
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ../frontend/build:/usr/share/nginx/html/
-      - static_volume_food:/staticfiles/
-      - docs_food:/usr/share/nginx/html/api/docs/
+      - ../docs/:/usr/share/nginx/html/api/docs/
+      - static_volume_food:/var/html/static/
+      - media_volume_food:/var/html/media/
     depends_on:
       - backend
       - frontend
-    restart: always

@@ -8,7 +8,7 @@ requests==2.26.0
 flake8
 django-filter==23.1
 PyJWT==2.1.0
-gunicorn
+gunicorn==20.0.4
 Pillow
 reportlab
 isort==5.12.0
