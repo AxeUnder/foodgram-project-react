@@ -98,11 +98,10 @@ jobs:
         debug: true
         script: |
           cd foodgram
-          sudo docker-compose stop
+          sudo docker compose stop
           sudo docker compose -f docker-compose.production.yml pull
           sudo docker compose -f docker-compose.production.yml down
-          sudo docker compose -f docker-compose.production.yml up -d
-          sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/static/. /backend_static/static/
+          sudo docker compose -f docker-compose.production.yml up -d --build
         port: 22
         sync: false
         use_insecure_cipher: false
