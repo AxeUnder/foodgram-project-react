@@ -79,8 +79,8 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
-    - name: Copy docker-compose.yml via ssh
-      uses: appleboy/scp-action@master
+    - name: Copy docker-compose.production.yml via ssh
+      uses: appleboy/scp-action@v0.1.2
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USER }}
@@ -89,7 +89,7 @@ jobs:
         source: "docker-compose.production.yml"
         target: "foodgram"
     - name: Executing remote ssh commands to deploy
-      uses: appleboy/ssh-action@master
+      uses: appleboy/scp-action@v0.1.2
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USER }}
@@ -97,13 +97,11 @@ jobs:
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         script: |
           cd foodgram
+          sudo docker-compose stop
           sudo docker compose -f docker-compose.production.yml pull
           sudo docker compose -f docker-compose.production.yml down
           sudo docker compose -f docker-compose.production.yml up -d
-          sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
-          sudo docker compose -f docker-compose.production.yml exec backend python manage.py import_csv
-          sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
-          sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
+          sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/static/. /backend_static/static/
 
   send_message:
     runs-on: ubuntu-latest
