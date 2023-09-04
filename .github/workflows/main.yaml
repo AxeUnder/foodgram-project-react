@@ -96,6 +96,7 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         script: |
+        debug: true
           cd foodgram
           sudo docker-compose stop
           sudo docker compose -f docker-compose.production.yml pull
