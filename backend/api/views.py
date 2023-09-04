@@ -265,7 +265,7 @@ class RecipeViewSet(ModelViewSet):
             url_name='add_favorite', permission_classes=[IsAuthenticated])
     def add_favorite(self, request, pk=None):
         serializer = FavoriteCreteSerializer(data={'recipe': pk},
-                                           context={'request': request})
+                                             context={'request': request})
         serializer.is_valid(raise_exception=True)
         favorite = serializer.save(user=request.user)
         favorite_data = RecipeMinifiedSerializer(
@@ -277,7 +277,7 @@ class RecipeViewSet(ModelViewSet):
             url_name='remove_favorite', permission_classes=[IsAuthenticated])
     def remove_favorite(self, request, pk=None):
         serializer = FavoriteCreteSerializer(data={'recipe': pk},
-                                              context={'request': request})
+                                             context={'request': request})
         serializer.is_valid(raise_exception=True)
         favorite = Favorite.objects.get(
             user=request.user,
@@ -296,7 +296,9 @@ class RecipeViewSet(ModelViewSet):
         shopping_cart_data = RecipeMinifiedSerializer(
             shopping_cart.recipe,
             context={'request': request}).data
-        return Response(data=shopping_cart_data, status=status.HTTP_201_CREATED)
+        return Response(
+            data=shopping_cart_data,
+            status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["delete"], url_path='shopping_cart',
             url_name='remove_from_shopping_cart',

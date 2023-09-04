@@ -1,10 +1,7 @@
 # api/utils.py
-import csv
-
 from collections import namedtuple
-from io import BytesIO, StringIO
+from io import BytesIO
 
-from django.http import HttpResponse
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
@@ -21,7 +18,7 @@ class IsAuthenticatedOrReadOnly(permissions.BasePermission):
         return request.user and request.user.is_authenticated
 
 
-def generate_shopping_list_pdf(shopping_list, user):
+def generate_shopping_list_pdf(shopping_list):
 
     def header_footer(canvas, doc):
         canvas.saveState()

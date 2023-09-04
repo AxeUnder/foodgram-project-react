@@ -8,15 +8,15 @@ volumes:
 services:
 
   db:
+    container_name: foodgram_db
     image: postgres:13.0-alpine
     env_file: .env
-    ports:
-      - "5432:5432"
     volumes:
       - pg_data_production_food:/var/lib/postgresql/data/
     restart: always
 
   backend:
+    container_name: foodgram_backend
     image: axeunder/foodgram_backend:latest
     env_file: .env
     volumes:
@@ -26,6 +26,7 @@ services:
       - db
 
   frontend:
+    container_name: foodgram_frontend
     image: axeunder/foodgram_frontend:latest
     env_file: .env
     command: cp -r /app/build/. /frontend_static/
@@ -33,14 +34,13 @@ services:
       - static_volume_food:/frontend_static/
 
   gateway:
-    image: axeunder/foodgram_gateway:latest
-    env_file: .env
+    container_name: foodgram_gateway
+    image: nginx:1.19.3
     ports:
       - "8080:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx.production.conf:/etc/nginx/conf.d/default.conf
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
-      - ./ssl/:/etc/nginx/ssl/
       - static_volume_food:/staticfiles/
       - media_value:/var/html/media/

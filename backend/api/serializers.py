@@ -20,10 +20,13 @@ class Base64ImageField(serializers.ImageField):
             ext = img_format.split('/')[-1]
             if ext.lower() not in ('jpeg', 'jpg', 'png'):
                 raise serializers.ValidationError(
-                    'Формат изображения не поддерживается. Используйте форматы JPEG или PNG.')
+                    'Формат изображения не поддерживается. \
+                    Используйте форматы JPEG или PNG.')
 
             uid = uuid.uuid4()
-            data = ContentFile(base64.b64decode(img_str), name=uid.urn[9:] + '.' + ext)
+            data = ContentFile(
+                base64.b64decode(img_str), name=uid.urn[9:] + '.' + ext
+            )
 
         return super(Base64ImageField, self).to_internal_value(data)
 
@@ -85,7 +88,9 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
 class SubscriptionCreateSerializer(serializers.Serializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
-    author = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
+    author = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all()
+    )
 
     class Meta:
         model = Subscription
@@ -94,10 +99,12 @@ class SubscriptionCreateSerializer(serializers.Serializer):
     def validate(self, attrs):
         user = self.context['request'].user
         author = attrs['author']
-        if self.context['request'].method == 'POST':  # Создание подписки
+        if self.context['request'].method == 'POST':
             if user == author:
-                raise serializers.ValidationError('Невозможно подписаться на самого себя')
-        elif self.context['request'].method == 'DELETE':  # Отмена подписки
+                raise serializers.ValidationError(
+                    'Невозможно подписаться на самого себя'
+                )
+        elif self.context['request'].method == 'DELETE':
             try:
                 Subscription.objects.get(user=user, author=author)
             except Subscription.DoesNotExist:
@@ -124,7 +131,9 @@ class FavoriteCreteSerializer(serializers.Serializer):
                 raise serializers.ValidationError('Рецепт уже в избранном')
         elif self.context['request'].method == 'DELETE':
             if not Favorite.objects.filter(user=user, recipe=recipe).exists():
-                raise serializers.ValidationError('Рецепт не найден в избранных')
+                raise serializers.ValidationError(
+                    'Рецепт не найден в избранных'
+                )
         return attrs
 
     def create(self, validated_data):
@@ -148,7 +157,8 @@ class ShoppingCartCreateSerializer(serializers.Serializer):
                 raise serializers.ValidationError(
                     'Рецепт уже в корзине')
         elif self.context['request'].method == 'DELETE':
-            if not ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
+            if not ShoppingCart.objects.filter(user=user,
+                                               recipe=recipe).exists():
                 raise serializers.ValidationError(
                     'Рецепт не найден в корзине')
         return attrs
@@ -239,9 +249,13 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
 
     def validate_amount(self, value):
         if value < 1:
-            raise serializers.ValidationError('Количество не должно быть меньше 1')
+            raise serializers.ValidationError(
+                'Количество не должно быть меньше 1'
+            )
         if value > 100_000:
-            raise serializers.ValidationError('Количество не должно быть больше 100000')
+            raise serializers.ValidationError(
+                'Количество не должно быть больше 100000'
+            )
         return value
 
 
