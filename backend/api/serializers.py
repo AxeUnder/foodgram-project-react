@@ -4,11 +4,10 @@ import uuid
 
 from django.core.files.base import ContentFile
 from django.db.transaction import atomic
-from rest_framework import serializers
-
 from recipes.models import (
     Favorite, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Tag,
 )
+from rest_framework import serializers
 from users.models import CustomUser, Subscription
 
 
