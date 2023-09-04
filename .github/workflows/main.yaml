@@ -95,14 +95,23 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        script: |
         debug: true
+        script: |
           cd foodgram
           sudo docker-compose stop
           sudo docker compose -f docker-compose.production.yml pull
           sudo docker compose -f docker-compose.production.yml down
           sudo docker compose -f docker-compose.production.yml up -d
           sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/static/. /backend_static/static/
+        port: 22
+        sync: false
+        use_insecure_cipher: false
+        timeout: 30s
+        command_timeout: 10m
+        proxy_port: 22
+        proxy_timeout: 30s
+        proxy_use_insecure_cipher: false
+        script_stop: false
 
   send_message:
     runs-on: ubuntu-latest
