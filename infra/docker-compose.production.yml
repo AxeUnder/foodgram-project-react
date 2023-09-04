@@ -43,4 +43,4 @@ services:
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static_volume_food:/staticfiles/
-      - media_value:/var/html/media/
+      - media_volume_food:/var/html/media/
