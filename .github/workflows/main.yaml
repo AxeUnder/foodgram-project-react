@@ -89,7 +89,7 @@ jobs:
         source: "infra/docker-compose.production.yml"
         target: "foodgram"
     - name: Executing remote ssh commands to deploy
-      uses: appleboy/scp-action@v0.1.3
+      uses: appleboy/scp-action@v0.1.4
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USER }}
