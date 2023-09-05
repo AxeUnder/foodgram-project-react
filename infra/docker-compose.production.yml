@@ -43,9 +43,10 @@ services:
       - ../infra/nginx.production.conf:/etc/nginx/conf.d/default.conf
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
+      - ./ssl:/etc/nginx/ssl/
       - static_volume_food:/staticfiles/
-      - media_volume_food:/var/html/media/
-      - /etc/letsencrypt:/etc/letsencrypt
+      - media_volume_food:/backend_media/
     depends_on:
       - backend
       - frontend
+    restart: always
