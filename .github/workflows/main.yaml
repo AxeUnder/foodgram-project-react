@@ -98,8 +98,8 @@ jobs:
         debug: true
         script: |
           cd foodgram/infra
-          sudo docker rm -f foodgram_db || true
           sudo docker compose -f docker-compose.production.yml -v down
+          sudo docker rm -f foodgram_backend foodgram_frontend foodgram_gateway foodgram_db || true
           sudo docker compose -f docker-compose.production.yml up -d --build
         port: 22
         sync: false
