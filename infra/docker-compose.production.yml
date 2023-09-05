@@ -35,7 +35,7 @@ services:
     volumes:
       - certbot_etc:/etc/letsencrypt/
       - certbot_var:/var/lib/letsencrypt/
-      - ./infra/ssl-dhparams.pem:/ssl-dhparams.pem
+      - ../infra/ssl-dhparams.pem:/ssl-dhparams.pem
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
     restart: always
 

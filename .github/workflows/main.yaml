@@ -113,7 +113,7 @@ jobs:
         port: 22
         sync: false
         use_insecure_cipher: false
-        command_timeout: 30m
+        command_timeout: 10m
         proxy_port: 22
         proxy_use_insecure_cipher: false
         script_stop: false
