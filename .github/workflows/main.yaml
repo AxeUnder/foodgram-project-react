@@ -108,13 +108,13 @@ jobs:
         script: |
           cd foodgram/infra
           sudo docker compose -f docker-compose.production.yml -v down
-          sudo docker rm -f foodgram_backend foodgram_frontend foodgram_gateway foodgram_db || true
+          sudo docker rm -f foodgram_backend foodgram_frontend foodgram_gateway foodgram_db foodgram_certbot || true
           sudo docker compose -f docker-compose.production.yml run --rm certbot certonly --webroot --webroot-path=/var/www/certbot --email ${{ secrets.EMAIL }} --agree-tos --no-eff-email --force-renewal -d foodgram.zapto.org
-          sudo docker compose -f docker-compose.production.yml up -d
+          sudo docker compose -f docker-compose.production.yml up -d --build
         port: 22
         sync: false
         use_insecure_cipher: false
-        command_timeout: 10m
+        command_timeout: 30m
         proxy_port: 22
         proxy_use_insecure_cipher: false
         script_stop: false
