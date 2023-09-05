@@ -19,7 +19,7 @@ services:
     container_name: foodgram_backend
     image: axeunder/foodgram_backend:latest
     env_file: .env
-    command: sh -c "cp -r /app/static/. /backend_static/ && cp -r /app/media/. /backend_media/"
+    command: sudo sh -c "cp -r /app/static/. /backend_static/ && cp -r /app/media/. /backend_media/"
     volumes:
       - static_volume_food:/backend_static/
       - media_volume_food:/backend_media/
