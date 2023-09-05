@@ -40,7 +40,7 @@ services:
       - "8080:80"
     volumes:
       - ./nginx.production.conf:/etc/nginx/conf.d/default.conf
-      - ../frontend/build:/usr/share/nginx/html/
-      - ../docs/:/usr/share/nginx/html/api/docs/
+      - ./frontend/build:/usr/share/nginx/html/
+      - ./docs/:/usr/share/nginx/html/api/docs/
       - static_volume_food:/staticfiles/
       - media_volume_food:/var/html/media/
