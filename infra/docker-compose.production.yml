@@ -29,16 +29,6 @@ services:
     volumes:
       - static_volume_food:/frontend_static/
 
-  certbot:
-    container_name: foodgram_certbot
-    image: certbot/certbot
-    volumes:
-      - certbot_etc:/etc/letsencrypt/
-      - certbot_var:/var/lib/letsencrypt/
-      - ../infra/ssl-dhparams.pem:/ssl-dhparams.pem
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-    restart: always
-
   gateway:
     container_name: foodgram_gateway
     image: nginx:1.19.3
@@ -62,5 +52,3 @@ volumes:
   pg_data_production_food:
   static_volume_food:
   media_volume_food:
-  certbot_etc:
-  certbot_var:
