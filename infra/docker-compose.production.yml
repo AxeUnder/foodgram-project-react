@@ -39,9 +39,9 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ../foodgram/nginx.production.conf:/etc/nginx/conf.d/default.conf
-      - ../foodgram/frontend/build:/usr/share/nginx/html/
-      - ../foodgram/docs/:/usr/share/nginx/html/api/docs/
+      - ../:/etc/nginx/conf.d/nginx.production.conf
+      - ../frontend/build:/usr/share/nginx/html/
+      - ../docs/:/usr/share/nginx/html/api/docs/
       - static_volume_food:/staticfiles/
       - media_volume_food:/var/html/media/
     depends_on:
