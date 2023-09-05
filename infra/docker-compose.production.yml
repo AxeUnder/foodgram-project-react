@@ -24,6 +24,7 @@ services:
       - media_volume_food:/backend_media/
     depends_on:
       - db
+    restart: always
 
   frontend:
     container_name: foodgram_frontend
@@ -39,7 +40,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ../:/etc/nginx/conf.d/nginx.production.conf
+      - ../nginx.production.conf:/etc/nginx/conf.d/default.conf
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static_volume_food:/staticfiles/
