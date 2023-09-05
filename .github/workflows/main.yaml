@@ -98,10 +98,7 @@ jobs:
         debug: true
         script: |
           cd foodgram/infra
-          sudo docker compose -f docker-compose.production.yml stop
-          sudo docker compose rm -f foodgram_backend foodgram_frontend
-          sudo docker compose -f docker-compose.production.yml pull
-          sudo docker compose -f docker-compose.production.yml down
+          sudo docker compose -f docker-compose.production.yml -v down
           sudo docker compose -f docker-compose.production.yml up -d --build
         port: 22
         sync: false
