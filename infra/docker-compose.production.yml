@@ -40,12 +40,9 @@ services:
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static_volume_food:/staticfiles/
       - media_volume_food:/backend_media/
-      - certbot_etc:/etc/letsencrypt
-      - certbot_var:/var/lib/letsencrypt
     depends_on:
       - backend
       - frontend
-      - certbot
     restart: always
 
 volumes:
