@@ -24,10 +24,8 @@ services:
   frontend:
     container_name: foodgram_frontend
     image: axeunder/foodgram_frontend:latest
-    env_file: .env
-    command: cp -r /app/build/. /frontend_static/
     volumes:
-      - static_volume_food:/frontend_static/
+      - ../frontend/:/app/result_build/
     restart: on-failure
 
   gateway:
