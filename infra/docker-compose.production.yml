@@ -40,7 +40,7 @@ services:
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static_volume_food:/staticfiles/
       - media_volume_food:/backend_media/
-      - /etc/letsencrypt:/etc/letsencryp
+      - /etc/letsencrypt:/etc/letsencrypt
     depends_on:
       - backend
       - frontend
