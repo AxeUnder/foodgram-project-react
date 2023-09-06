@@ -28,6 +28,7 @@ services:
     command: cp -r /app/build/. /frontend_static/
     volumes:
       - static_volume_food:/frontend_static/
+    restart: on-failure
 
   gateway:
     container_name: foodgram_gateway
