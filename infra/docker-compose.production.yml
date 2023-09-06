@@ -35,7 +35,7 @@ services:
       - "8080:443"
     volumes:
       - ../infra/nginx.production.conf:/etc/nginx/conf.d/default.conf
-      - ../frontend/build:/usr/share/nginx/html/
+      - ../frontend/build:/app/result_build/
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static_volume_food:/staticfiles/
       - media_volume_food:/backend_media/
