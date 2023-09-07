@@ -25,8 +25,8 @@ services:
     container_name: foodgram_frontend
     image: axeunder/foodgram_frontend:latest
     volumes:
-      - ../frontend/build:/app/build/
-    restart: on-failure
+      - ../frontend/:/app/result_build/
+    restart: always
 
   gateway:
     container_name: foodgram_gateway
