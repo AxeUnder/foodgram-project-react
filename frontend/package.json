@@ -38,5 +38,5 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://web:8090/"
+  "proxy": "http://backend:8090/"
 }
