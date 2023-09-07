@@ -10,5 +10,6 @@ RUN npm run build
 FROM nginx:1.19.3
 COPY --from=build /app/build /usr/share/nginx/html
 COPY infra/nginx.production.conf /etc/nginx/conf.d/default.conf
+COPY /etc/letsencrypt /etc/letsencrypt
 EXPOSE 80 443
 CMD ["nginx", "-g", "daemon off;"]
