@@ -18,7 +18,7 @@ class IsAuthenticatedOrReadOnly(permissions.BasePermission):
         return request.user and request.user.is_authenticated
 
 
-def generate_shopping_list_pdf(shopping_list):
+def generate_shopping_list_pdf(shopping_list, user):
 
     def header_footer(canvas, doc):
         canvas.saveState()
