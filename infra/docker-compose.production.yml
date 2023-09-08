@@ -25,7 +25,7 @@ services:
     container_name: foodgram_frontend
     image: axeunder/foodgram_frontend:latest
     volumes:
-      - static_volume_food:/frontend_static/
+      - static_volume_food:/app/build/
     restart: on-failure
 
   gateway:
@@ -36,7 +36,7 @@ services:
     volumes:
       - ../infra/nginx.production.conf:/etc/nginx/conf.d/default.conf
       - ../docs/:/usr/share/nginx/html/api/docs/
-      - static_volume_food:/frontend_static/
+      - static_volume_food:/app/build/
       - media_volume_food:/backend_media/
       - /etc/letsencrypt:/etc/letsencrypt
     depends_on:
