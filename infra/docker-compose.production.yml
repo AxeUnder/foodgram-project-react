@@ -15,8 +15,8 @@ services:
     image: axeunder/foodgram_backend:latest
     env_file: .env
     volumes:
-      - static_volume_food:/backend_static/
-      - media_volume_food:/backend_media/
+      - static_volume_food:/app/static/
+      - media_volume_food:/app/media/
     depends_on:
       - db
     restart: always
