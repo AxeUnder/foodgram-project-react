@@ -145,4 +145,5 @@
    }
    ```
 ## Об авторе
-Python-разработчик **[AxeUnder](https://github.com/AxeUnder)**.
+Python-разработчик
+>[AxeUnder](https://github.com/AxeUnder).
