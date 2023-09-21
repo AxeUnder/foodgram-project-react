@@ -10,7 +10,7 @@
 - созданы, развёрнуты и запущены на сервере мультиконтейнерные приложения;
 - закреплены на практике основы DevOps, включая CI&CD.
 
-**Инструменты и стек:** #python #JSON #YAML #Django #React #Telegram #API #Docker #Nginx #PostgreSQL #Gunicorn #JWT #Postman #Djoser #PyJWT #Pillow #gunicorn
+**Инструменты и стек:** #python #JSON #YAML #Django #React #Telegram #API #Docker #Nginx #PostgreSQL #Gunicorn #JWT #Postman #Djoser #PyJWT #Pillow
 
 ## Запуск приложения в контейнере на сервере
 1. На сервере создайте директорию для приложения:
